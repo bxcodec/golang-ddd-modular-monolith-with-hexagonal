@@ -2,35 +2,135 @@ package repository
 
 import (
 	"database/sql"
+	"time"
 
+	sq "github.com/Masterminds/squirrel"
 	"github.com/bxcodec/golang-ddd-modular-monolith-with-hexagonal/modules/payment"
 	"github.com/bxcodec/golang-ddd-modular-monolith-with-hexagonal/modules/payment/internal/ports"
 )
 
-type PaymentRepository struct {
+type paymentRepository struct {
 	db *sql.DB
+	qb sq.StatementBuilderType
 }
 
 func NewPaymentRepository(db *sql.DB) ports.IPaymentRepository {
-	return &PaymentRepository{db: db}
+	return &paymentRepository{
+		db: db,
+		qb: sq.StatementBuilder.PlaceholderFormat(sq.Dollar),
+	}
 }
 
-func (r *PaymentRepository) CreatePayment(p *payment.Payment) error {
-	panic("not implemented")
+func (r *paymentRepository) CreatePayment(p *payment.Payment) error {
+	now := time.Now()
+	p.CreatedAt = now
+	p.UpdatedAt = now
+
+	err := r.qb.Insert("payments").
+		Columns("id", "amount", "currency", "status", "created_at", "updated_at").
+		Values(p.ID, p.Amount, p.Currency, p.Status, p.CreatedAt, p.UpdatedAt).
+		Suffix("RETURNING id").
+		RunWith(r.db).
+		QueryRow().
+		Scan(&p.ID)
+
+	return err
 }
 
-func (r *PaymentRepository) GetPayment(id string) (*payment.Payment, error) {
-	panic("not implemented")
+func (r *paymentRepository) GetPayment(id string) (*payment.Payment, error) {
+	var p payment.Payment
+
+	err := r.qb.Select("id", "amount", "currency", "status", "created_at", "updated_at").
+		From("payments").
+		Where(sq.Eq{"id": id}).
+		RunWith(r.db).
+		QueryRow().
+		Scan(&p.ID, &p.Amount, &p.Currency, &p.Status, &p.CreatedAt, &p.UpdatedAt)
+
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, err
+		}
+		return nil, err
+	}
+
+	return &p, nil
 }
 
-func (r *PaymentRepository) GetPayments() ([]*payment.Payment, error) {
-	panic("not implemented")
+func (r *paymentRepository) GetPayments() ([]*payment.Payment, error) {
+	rows, err := r.qb.Select("id", "amount", "currency", "status", "created_at", "updated_at").
+		From("payments").
+		OrderBy("created_at DESC").
+		RunWith(r.db).
+		Query()
+
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	payments := make([]*payment.Payment, 0)
+	for rows.Next() {
+		var p payment.Payment
+		if err := rows.Scan(&p.ID, &p.Amount, &p.Currency, &p.Status, &p.CreatedAt, &p.UpdatedAt); err != nil {
+			return nil, err
+		}
+		payments = append(payments, &p)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return payments, nil
 }
 
-func (r *PaymentRepository) UpdatePayment(p *payment.Payment) error {
-	panic("not implemented")
+func (r *paymentRepository) UpdatePayment(p *payment.Payment) error {
+	p.UpdatedAt = time.Now()
+
+	result, err := r.qb.Update("payments").
+		Set("amount", p.Amount).
+		Set("currency", p.Currency).
+		Set("status", p.Status).
+		Set("updated_at", p.UpdatedAt).
+		Where(sq.Eq{"id": p.ID}).
+		RunWith(r.db).
+		Exec()
+
+	if err != nil {
+		return err
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	if rowsAffected == 0 {
+		return sql.ErrNoRows
+	}
+
+	return nil
 }
 
-func (r *PaymentRepository) DeletePayment(id string) error {
-	panic("not implemented")
+func (r *paymentRepository) DeletePayment(id string) error {
+	result, err := r.qb.Delete("payments").
+		Where(sq.Eq{"id": id}).
+		RunWith(r.db).
+		Exec()
+
+	if err != nil {
+		return err
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	if rowsAffected == 0 {
+		return sql.ErrNoRows
+	}
+
+	return nil
 }

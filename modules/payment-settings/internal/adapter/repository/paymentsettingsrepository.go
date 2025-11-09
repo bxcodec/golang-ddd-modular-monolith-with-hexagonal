@@ -2,34 +2,182 @@ package repository
 
 import (
 	"database/sql"
+	"encoding/base64"
+	"fmt"
+	"strconv"
+	"time"
 
+	sq "github.com/Masterminds/squirrel"
 	paymentsettings "github.com/bxcodec/golang-ddd-modular-monolith-with-hexagonal/modules/payment-settings"
 )
 
 type PaymentSettingsRepository struct {
 	db *sql.DB
+	qb sq.StatementBuilderType
 }
 
 func NewPaymentSettingsRepository(db *sql.DB) *PaymentSettingsRepository {
-	return &PaymentSettingsRepository{db: db}
+	return &PaymentSettingsRepository{
+		db: db,
+		qb: sq.StatementBuilder.PlaceholderFormat(sq.Dollar),
+	}
 }
 
 func (r *PaymentSettingsRepository) FetchPaymentSettings(params paymentsettings.PaymentSettingFetchParams) (res []paymentsettings.PaymentSetting, nextCursor string, err error) {
-	panic("not implemented")
+	query := r.qb.Select("id", "amount", "currency", "status", "created_at", "updated_at").
+		From("payment_settings").
+		OrderBy("created_at DESC")
+
+	// Apply currency filter if provided
+	if params.Currency != "" {
+		query = query.Where(sq.Eq{"currency": params.Currency})
+	}
+
+	// Apply cursor-based pagination
+	if params.Cursor != "" {
+		cursorTime, decodeErr := decodeCursor(params.Cursor)
+		if decodeErr != nil {
+			return nil, "", fmt.Errorf("invalid cursor: %w", decodeErr)
+		}
+		query = query.Where(sq.Lt{"created_at": cursorTime})
+	}
+
+	// Apply limit
+	limit := params.Limit
+	if limit <= 0 {
+		limit = 10 // default limit
+	}
+	// Fetch one extra to determine if there's a next page
+	query = query.Limit(uint64(limit + 1))
+
+	rows, err := query.RunWith(r.db).Query()
+	if err != nil {
+		return nil, "", err
+	}
+	defer rows.Close()
+
+	res = make([]paymentsettings.PaymentSetting, 0)
+	for rows.Next() {
+		var setting paymentsettings.PaymentSetting
+		if err := rows.Scan(&setting.ID, &setting.Amount, &setting.Currency, &setting.Status, &setting.CreatedAt, &setting.UpdatedAt); err != nil {
+			return nil, "", err
+		}
+		res = append(res, setting)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, "", err
+	}
+
+	// Check if there are more results
+	if len(res) > limit {
+		// Remove the extra item
+		res = res[:limit]
+		// Set next cursor to the last item's created_at
+		nextCursor = encodeCursor(res[len(res)-1].CreatedAt)
+	}
+
+	return res, nextCursor, nil
 }
 
 func (r *PaymentSettingsRepository) GetPaymentSettingByCurrency(currency string) (paymentsettings.PaymentSetting, error) {
-	panic("not implemented")
+	var setting paymentsettings.PaymentSetting
+
+	err := r.qb.Select("id", "amount", "currency", "status", "created_at", "updated_at").
+		From("payment_settings").
+		Where(sq.Eq{"currency": currency}).
+		RunWith(r.db).
+		QueryRow().
+		Scan(&setting.ID, &setting.Amount, &setting.Currency, &setting.Status, &setting.CreatedAt, &setting.UpdatedAt)
+
+	if err != nil {
+		return paymentsettings.PaymentSetting{}, err
+	}
+
+	return setting, nil
 }
 
 func (r *PaymentSettingsRepository) CreatePaymentSetting(settings *paymentsettings.PaymentSetting) error {
-	panic("not implemented")
+	now := time.Now()
+	settings.CreatedAt = now
+	settings.UpdatedAt = now
+
+	err := r.qb.Insert("payment_settings").
+		Columns("id", "amount", "currency", "status", "created_at", "updated_at").
+		Values(settings.ID, settings.Amount, settings.Currency, settings.Status, settings.CreatedAt, settings.UpdatedAt).
+		Suffix("RETURNING id").
+		RunWith(r.db).
+		QueryRow().
+		Scan(&settings.ID)
+
+	return err
 }
 
 func (r *PaymentSettingsRepository) UpdatePaymentSetting(settings *paymentsettings.PaymentSetting) error {
-	panic("not implemented")
+	settings.UpdatedAt = time.Now()
+
+	result, err := r.qb.Update("payment_settings").
+		Set("amount", settings.Amount).
+		Set("currency", settings.Currency).
+		Set("status", settings.Status).
+		Set("updated_at", settings.UpdatedAt).
+		Where(sq.Eq{"id": settings.ID}).
+		RunWith(r.db).
+		Exec()
+
+	if err != nil {
+		return err
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	if rowsAffected == 0 {
+		return sql.ErrNoRows
+	}
+
+	return nil
 }
 
 func (r *PaymentSettingsRepository) DeletePaymentSetting(id string) error {
-	panic("not implemented")
+	result, err := r.qb.Delete("payment_settings").
+		Where(sq.Eq{"id": id}).
+		RunWith(r.db).
+		Exec()
+
+	if err != nil {
+		return err
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	if rowsAffected == 0 {
+		return sql.ErrNoRows
+	}
+
+	return nil
+}
+
+// Helper functions for cursor encoding/decoding
+func encodeCursor(t time.Time) string {
+	return base64.StdEncoding.EncodeToString([]byte(strconv.FormatInt(t.UnixNano(), 10)))
+}
+
+func decodeCursor(cursor string) (time.Time, error) {
+	decoded, err := base64.StdEncoding.DecodeString(cursor)
+	if err != nil {
+		return time.Time{}, err
+	}
+
+	nano, err := strconv.ParseInt(string(decoded), 10, 64)
+	if err != nil {
+		return time.Time{}, err
+	}
+
+	return time.Unix(0, nano), nil
 }
