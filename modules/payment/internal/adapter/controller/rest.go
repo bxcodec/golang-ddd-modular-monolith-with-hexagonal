@@ -4,7 +4,7 @@ import (
 	"net/http"
 
 	"github.com/bxcodec/golang-ddd-modular-monolith-with-hexagonal/modules/payment"
-	"github.com/bxcodec/golang-ddd-modular-monolith-with-hexagonal/modules/payment/internal/dto"
+	"github.com/bxcodec/golang-ddd-modular-monolith-with-hexagonal/modules/payment/internal/adapter/controller/dto"
 	"github.com/labstack/echo/v4"
 )
 

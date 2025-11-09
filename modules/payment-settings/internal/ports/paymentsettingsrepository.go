@@ -5,8 +5,8 @@ import (
 )
 
 type IPaymentSettingsRepository interface {
-	GetPaymentSettingsByCurrency(currency string) (paymentsettings.PaymentSettings, error)
-	CreatePaymentSettings(settings *paymentsettings.PaymentSettings) error
-	UpdatePaymentSettings(settings *paymentsettings.PaymentSettings) error
-	DeletePaymentSettings(id string) error
+	FetchPaymentSettings(params paymentsettings.PaymentSettingFetchParams) (res []paymentsettings.PaymentSetting, nextCursor string, err error)
+	CreatePaymentSetting(settings *paymentsettings.PaymentSetting) error
+	UpdatePaymentSetting(settings *paymentsettings.PaymentSetting) error
+	DeletePaymentSetting(id string) error
 }

@@ -13,18 +13,18 @@ func NewPaymentSettingsService(repo ports.IPaymentSettingsRepository) *PaymentSe
 	return &PaymentSettingsService{repo: repo}
 }
 
-func (s *PaymentSettingsService) GetPaymentSettingsByCurrency(currency string) (paymentsettings.PaymentSettings, error) {
-	return s.repo.GetPaymentSettingsByCurrency(currency)
+func (s *PaymentSettingsService) CreatePaymentSetting(settings *paymentsettings.PaymentSetting) error {
+	return s.repo.CreatePaymentSetting(settings)
 }
 
-func (s *PaymentSettingsService) CreatePaymentSettings(settings *paymentsettings.PaymentSettings) error {
-	return s.repo.CreatePaymentSettings(settings)
+func (s *PaymentSettingsService) UpdatePaymentSetting(settings *paymentsettings.PaymentSetting) error {
+	return s.repo.UpdatePaymentSetting(settings)
 }
 
-func (s *PaymentSettingsService) UpdatePaymentSettings(settings *paymentsettings.PaymentSettings) error {
-	return s.repo.UpdatePaymentSettings(settings)
+func (s *PaymentSettingsService) DeletePaymentSetting(id string) error {
+	return s.repo.DeletePaymentSetting(id)
 }
 
-func (s *PaymentSettingsService) DeletePaymentSettings(id string) error {
-	return s.repo.DeletePaymentSettings(id)
+func (s *PaymentSettingsService) FetchPaymentSettings(params paymentsettings.PaymentSettingFetchParams) (res []paymentsettings.PaymentSetting, nextCursor string, err error) {
+	return s.repo.FetchPaymentSettings(params)
 }

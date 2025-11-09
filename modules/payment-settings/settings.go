@@ -3,7 +3,7 @@ package paymentsettings
 import "time"
 
 // PaymentSettings represents payment configuration settings - your domain model
-type PaymentSettings struct {
+type PaymentSetting struct {
 	ID        string
 	Amount    float64
 	Currency  string
@@ -12,10 +12,16 @@ type PaymentSettings struct {
 	UpdatedAt time.Time
 }
 
+type PaymentSettingFetchParams struct {
+	Currency string
+	Limit    int
+	Cursor   string
+}
+
 // IPaymentSettingsService defines the public API for payment settings operations
 type IPaymentSettingsService interface {
-	GetPaymentSettingsByCurrency(currency string) (PaymentSettings, error)
-	CreatePaymentSettings(paymentSettings *PaymentSettings) error
-	UpdatePaymentSettings(paymentSettings *PaymentSettings) error
-	DeletePaymentSettings(id string) error
+	FetchPaymentSettings(params PaymentSettingFetchParams) (res []PaymentSetting, nextCursor string, err error)
+	CreatePaymentSetting(settings *PaymentSetting) error
+	UpdatePaymentSetting(settings *PaymentSetting) error
+	DeletePaymentSetting(id string) error
 }

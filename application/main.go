@@ -6,26 +6,46 @@ import (
 
 	settingsfactory "github.com/bxcodec/golang-ddd-modular-monolith-with-hexagonal/modules/payment-settings/factory"
 	paymentfactory "github.com/bxcodec/golang-ddd-modular-monolith-with-hexagonal/modules/payment/factory"
+	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
 	_ "github.com/mattn/go-sqlite3"
 )
 
 func main() {
+	// Initialize database
 	db, err := sql.Open("sqlite3", "file::memory:?cache=shared")
 	if err != nil {
 		log.Fatal(err)
 	}
 	defer db.Close()
 
-	// Initialize modules in dependency order using factory packages
+	// Initialize modules in dependency order (like Nest.js)
+	// Factory handles ALL the wiring: hexagon core + adapters
+
 	// 1. Payment Settings module (no dependencies)
-	paymentSettingsService := settingsfactory.NewPaymentSettingsService(db)
+	paymentSettingsModule := settingsfactory.NewModule(settingsfactory.ModuleConfig{
+		DB: db,
+	})
 
 	// 2. Payment module (depends on Payment Settings)
-	paymentService := paymentfactory.NewPaymentService(db, paymentSettingsService)
+	paymentModule := paymentfactory.NewModule(paymentfactory.ModuleConfig{
+		DB:                  db,
+		PaymentSettingsPort: paymentSettingsModule.Service,
+	})
 
-	// Use the services
-	_ = paymentService
-	_ = paymentSettingsService
+	// Setup HTTP server and register module routes
+	e := echo.New()
+	e.Use(middleware.Logger())
+	e.Use(middleware.Recover())
 
-	log.Println("Application initialized successfully!")
+	// Register module HTTP handlers (inbound adapters)
+	api := e.Group("/api/v1")
+	paymentModule.RegisterHTTPHandlers(api)
+	paymentSettingsModule.RegisterHTTPHandlers(api)
+
+	// Start server
+	log.Println("Starting server on :8080")
+	if err := e.Start(":8080"); err != nil {
+		log.Fatal(err)
+	}
 }

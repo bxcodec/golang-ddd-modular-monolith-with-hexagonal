@@ -2,6 +2,7 @@ package service
 
 import (
 	"github.com/bxcodec/golang-ddd-modular-monolith-with-hexagonal/modules/payment"
+	paymentsettings "github.com/bxcodec/golang-ddd-modular-monolith-with-hexagonal/modules/payment-settings"
 	"github.com/bxcodec/golang-ddd-modular-monolith-with-hexagonal/modules/payment/internal/ports"
 )
 
@@ -19,7 +20,11 @@ func NewPaymentService(paymentRepo ports.IPaymentRepository,
 }
 
 func (s *PaymentService) CreatePayment(p *payment.Payment) error {
-	paymentSettings, err := s.paymentSettingsRepo.GetPaymentSettingsByCurrency(p.Currency)
+	paymentSettings, _, err := s.paymentSettingsRepo.FetchPaymentSettings(paymentsettings.PaymentSettingFetchParams{
+		Currency: p.Currency,
+		Limit:    1,
+		Cursor:   "",
+	})
 	if err != nil {
 		return err
 	}
