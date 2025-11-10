@@ -1,3 +1,12 @@
+// Package factory provides module initialization and dependency wiring.
+//
+// The factory pattern is used to assemble modules in a modular monolith:
+//   - Instantiates all adapters (repositories, controllers, cron jobs)
+//   - Wires dependencies through constructor injection
+//   - Returns a complete, ready-to-use Module
+//
+// This approach keeps the wiring logic separate from the domain and allows
+// different configurations for different environments (dev, test, prod).
 package factory
 
 import (
@@ -13,23 +22,30 @@ import (
 	"github.com/bxcodec/golang-ddd-modular-monolith-with-hexagonal/modules/payment/internal/service"
 )
 
-// ModuleConfig contains the dependencies needed to initialize the payment module
+// ModuleConfig contains all external dependencies required to initialize the Payment module.
+//
+// PaymentSettingsPort demonstrates inter-module dependencies in a modular monolith:
+//   - The Payment module depends on Payment Settings functionality
+//   - Instead of direct module import, we depend on a port interface
+//   - The calling code injects the actual implementation
+//   - This prevents circular dependencies and maintains module boundaries
 type ModuleConfig struct {
-	DB *sql.DB
-	// Payment Module depends on Payment Settings "public API".
-	// Here we define the public API as the dependency needed to initialize the module.
-	// But we don't need to import directly the module here. Instead we defined the port interface in the ports package.
-	// this is to follow Golang idiomatic way of doing things.
-	// also this is to avoid circular dependencies.
+	DB                  *sql.DB
 	PaymentSettingsPort ports.IPaymentSettingsPort
-	// Cron configuration
-	CronBatchSize int
-	CronDryRun    bool
-	// In the future if we need more dependencies, we can add them here.
+	CronBatchSize       int
+	CronDryRun          bool
 }
 
-// NewModule creates a fully wired payment module
-// This assembles ALL components: core (hexagon) + adapters (controllers, repositories, cron)
+// NewModule assembles and wires the complete Payment module using dependency injection.
+//
+// This is where hexagonal architecture comes together:
+//   1. Create outbound adapters (repository for database access)
+//   2. Inject adapters into the core service (hexagon)
+//   3. Create inbound adapters (HTTP controller, cron jobs)
+//   4. Return the module with all components connected
+//
+// The result is a fully independent module that can be deployed as part of a monolith
+// or potentially extracted into a microservice with minimal changes.
 func NewModule(config ModuleConfig) *payment.Module {
 	// Wire up outbound adapters (repositories)
 	paymentRepo := repository.NewPaymentRepository(config.DB)
