@@ -7,14 +7,15 @@ import (
 	"net/http"
 	"testing"
 
-	paymentsettingsfactory "github.com/bxcodec/golang-ddd-modular-monolith-with-hexagonal/modules/payment-settings/factory"
-	"github.com/bxcodec/golang-ddd-modular-monolith-with-hexagonal/modules/payment/factory"
-	"github.com/bxcodec/golang-ddd-modular-monolith-with-hexagonal/modules/payment/internal/adapter/controller/dto"
-	"github.com/bxcodec/golang-ddd-modular-monolith-with-hexagonal/pkg/testutils"
 	"github.com/labstack/echo/v4"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
+
+	paymentsettingsfactory "github.com/bxcodec/golang-ddd-modular-monolith-with-hexagonal/modules/payment-settings/factory"
+	"github.com/bxcodec/golang-ddd-modular-monolith-with-hexagonal/modules/payment/factory"
+	"github.com/bxcodec/golang-ddd-modular-monolith-with-hexagonal/modules/payment/internal/adapter/controller/dto"
+	"github.com/bxcodec/golang-ddd-modular-monolith-with-hexagonal/pkg/testutils"
 )
 
 type PaymentControllerE2ETestSuite struct {

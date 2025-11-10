@@ -3,12 +3,13 @@ package repository
 import (
 	"testing"
 
-	paymentsettings "github.com/bxcodec/golang-ddd-modular-monolith-with-hexagonal/modules/payment-settings"
-	pkgerrors "github.com/bxcodec/golang-ddd-modular-monolith-with-hexagonal/pkg/errors"
-	"github.com/bxcodec/golang-ddd-modular-monolith-with-hexagonal/pkg/testutils"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
+
+	paymentsettings "github.com/bxcodec/golang-ddd-modular-monolith-with-hexagonal/modules/payment-settings"
+	pkgerrors "github.com/bxcodec/golang-ddd-modular-monolith-with-hexagonal/pkg/errors"
+	"github.com/bxcodec/golang-ddd-modular-monolith-with-hexagonal/pkg/testutils"
 )
 
 type PaymentSettingsRepositoryTestSuite struct {

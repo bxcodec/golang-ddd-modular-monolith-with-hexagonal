@@ -3,11 +3,12 @@ package factory
 import (
 	"database/sql"
 
+	"github.com/labstack/echo/v4"
+
 	paymentsettings "github.com/bxcodec/golang-ddd-modular-monolith-with-hexagonal/modules/payment-settings"
 	"github.com/bxcodec/golang-ddd-modular-monolith-with-hexagonal/modules/payment-settings/internal/adapter/controller"
 	"github.com/bxcodec/golang-ddd-modular-monolith-with-hexagonal/modules/payment-settings/internal/adapter/repository"
 	"github.com/bxcodec/golang-ddd-modular-monolith-with-hexagonal/modules/payment-settings/internal/service"
-	"github.com/labstack/echo/v4"
 )
 
 // ModuleConfig contains the dependencies needed to initialize the payment-settings module

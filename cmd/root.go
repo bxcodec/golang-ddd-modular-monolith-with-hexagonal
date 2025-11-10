@@ -5,11 +5,12 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/bxcodec/golang-ddd-modular-monolith-with-hexagonal/pkg/config"
-	"github.com/bxcodec/golang-ddd-modular-monolith-with-hexagonal/pkg/logger"
 	_ "github.com/lib/pq"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
+
+	"github.com/bxcodec/golang-ddd-modular-monolith-with-hexagonal/pkg/config"
+	"github.com/bxcodec/golang-ddd-modular-monolith-with-hexagonal/pkg/logger"
 )
 
 var (

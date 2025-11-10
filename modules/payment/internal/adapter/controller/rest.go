@@ -4,9 +4,10 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/labstack/echo/v4"
+
 	"github.com/bxcodec/golang-ddd-modular-monolith-with-hexagonal/modules/payment"
 	"github.com/bxcodec/golang-ddd-modular-monolith-with-hexagonal/modules/payment/internal/adapter/controller/dto"
-	"github.com/labstack/echo/v4"
 )
 
 type paymentController struct {

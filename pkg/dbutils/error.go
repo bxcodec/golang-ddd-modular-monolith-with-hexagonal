@@ -3,9 +3,10 @@ package dbutils
 import (
 	"database/sql"
 
-	"github.com/bxcodec/golang-ddd-modular-monolith-with-hexagonal/pkg/errors"
 	"github.com/lib/pq"
 	"github.com/rs/zerolog/log"
+
+	"github.com/bxcodec/golang-ddd-modular-monolith-with-hexagonal/pkg/errors"
 )
 
 func HandlePostgresError(err error) error {

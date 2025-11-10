@@ -3,13 +3,14 @@ package factory
 import (
 	"database/sql"
 
+	"github.com/labstack/echo/v4"
+
 	"github.com/bxcodec/golang-ddd-modular-monolith-with-hexagonal/modules/payment"
 	"github.com/bxcodec/golang-ddd-modular-monolith-with-hexagonal/modules/payment/internal/adapter/controller"
 	"github.com/bxcodec/golang-ddd-modular-monolith-with-hexagonal/modules/payment/internal/adapter/cron"
 	"github.com/bxcodec/golang-ddd-modular-monolith-with-hexagonal/modules/payment/internal/adapter/repository"
 	"github.com/bxcodec/golang-ddd-modular-monolith-with-hexagonal/modules/payment/internal/ports"
 	"github.com/bxcodec/golang-ddd-modular-monolith-with-hexagonal/modules/payment/internal/service"
-	"github.com/labstack/echo/v4"
 )
 
 // ModuleConfig contains the dependencies needed to initialize the payment module

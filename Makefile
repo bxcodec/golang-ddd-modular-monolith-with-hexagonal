@@ -54,10 +54,31 @@ docker-teardown:
 
 # ~~~ Code Actions ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+fmt: ## Format code using gofmt, gofumpt and goimports
+	@echo "Formatting code..."
+	@go fmt ./...
+	@if command -v gofumpt >/dev/null 2>&1; then \
+		gofumpt -l -w .; \
+	else \
+		echo "gofumpt not found, installing..."; \
+		go install mvdan.cc/gofumpt@latest; \
+		gofumpt -l -w .; \
+	fi
+	@if command -v goimports >/dev/null 2>&1; then \
+		goimports -local github.com/bxcodec/golang-ddd-modular-monolith-with-hexagonal -w .; \
+	else \
+		echo "goimports not found, installing..."; \
+		go install golang.org/x/tools/cmd/goimports@latest; \
+		goimports -local github.com/bxcodec/golang-ddd-modular-monolith-with-hexagonal -w .; \
+	fi
+	@echo "Code formatted successfully"
+
+format: fmt ## Alias for fmt
+
 lint: $(GOLANGCI) ## Runs golangci-lint with predefined configuration
 	@echo "Applying linter"
 	golangci-lint version
-	golangci-lint run -c .golangci.yaml ./...
+	golangci-lint run -c .golangci.yml ./...
 
 # -trimpath - will remove the filepathes from the reports, good to same money on network trafic,
 #             focus on bug reports, and find issues fast.

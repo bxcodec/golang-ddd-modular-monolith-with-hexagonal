@@ -5,8 +5,9 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/bxcodec/golang-ddd-modular-monolith-with-hexagonal/pkg/errors"
 	"github.com/lib/pq"
+
+	"github.com/bxcodec/golang-ddd-modular-monolith-with-hexagonal/pkg/errors"
 )
 
 func EncodeCursor(objectID string) (res string) {

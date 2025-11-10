@@ -5,6 +5,7 @@ import (
 	"time"
 
 	sq "github.com/Masterminds/squirrel"
+
 	paymentsettings "github.com/bxcodec/golang-ddd-modular-monolith-with-hexagonal/modules/payment-settings"
 	"github.com/bxcodec/golang-ddd-modular-monolith-with-hexagonal/pkg/dbutils"
 	"github.com/bxcodec/golang-ddd-modular-monolith-with-hexagonal/pkg/errors"
@@ -91,7 +92,6 @@ func (r *PaymentSettingsRepository) GetPaymentSetting(id string) (result payment
 		RunWith(r.db).
 		QueryRow().
 		Scan(&result.ID, &result.SettingKey, &result.SettingValue, &result.Currency, &result.Status, &result.CreatedAt, &result.UpdatedAt)
-
 	if err != nil {
 		return result, dbutils.HandlePostgresError(err)
 	}
@@ -114,7 +114,6 @@ func (r *PaymentSettingsRepository) CreatePaymentSetting(settings *paymentsettin
 		Values(settings.ID, settings.SettingKey, settings.SettingValue, settings.Currency, settings.Status, settings.CreatedAt, settings.UpdatedAt).
 		RunWith(r.db).
 		Exec()
-
 	if err != nil {
 		return dbutils.HandlePostgresError(err)
 	}
@@ -134,7 +133,6 @@ func (r *PaymentSettingsRepository) UpdatePaymentSetting(settings *paymentsettin
 		Where(sq.Eq{"id": settings.ID}).
 		RunWith(r.db).
 		Exec()
-
 	if err != nil {
 		return dbutils.HandlePostgresError(err)
 	}
@@ -156,7 +154,6 @@ func (r *PaymentSettingsRepository) DeletePaymentSetting(id string) (err error) 
 		Where(sq.Eq{"id": id}).
 		RunWith(r.db).
 		Exec()
-
 	if err != nil {
 		return dbutils.HandlePostgresError(err)
 	}

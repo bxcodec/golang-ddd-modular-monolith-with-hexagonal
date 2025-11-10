@@ -5,6 +5,7 @@ import (
 	"time"
 
 	sq "github.com/Masterminds/squirrel"
+
 	"github.com/bxcodec/golang-ddd-modular-monolith-with-hexagonal/modules/payment"
 	"github.com/bxcodec/golang-ddd-modular-monolith-with-hexagonal/modules/payment/internal/ports"
 	"github.com/bxcodec/golang-ddd-modular-monolith-with-hexagonal/pkg/dbutils"
@@ -41,7 +42,6 @@ func (r *paymentRepository) CreatePayment(p *payment.Payment) (err error) {
 		Values(p.ID, p.Amount, p.Currency, p.Status, p.CreatedAt, p.UpdatedAt).
 		RunWith(r.db).
 		Exec()
-
 	if err != nil {
 		return dbutils.HandlePostgresError(err)
 	}
@@ -56,7 +56,6 @@ func (r *paymentRepository) GetPayment(id string) (p payment.Payment, err error)
 		RunWith(r.db).
 		QueryRow().
 		Scan(&p.ID, &p.Amount, &p.Currency, &p.Status, &p.CreatedAt, &p.UpdatedAt)
-
 	if err != nil {
 		return payment.Payment{}, dbutils.HandlePostgresError(err)
 	}
@@ -130,7 +129,6 @@ func (r *paymentRepository) UpdatePayment(p *payment.Payment) (err error) {
 		Where(sq.Eq{"id": p.ID}).
 		RunWith(r.db).
 		Exec()
-
 	if err != nil {
 		return dbutils.HandlePostgresError(err)
 	}
@@ -152,7 +150,6 @@ func (r *paymentRepository) DeletePayment(id string) (err error) {
 		Where(sq.Eq{"id": id}).
 		RunWith(r.db).
 		Exec()
-
 	if err != nil {
 		return dbutils.HandlePostgresError(err)
 	}

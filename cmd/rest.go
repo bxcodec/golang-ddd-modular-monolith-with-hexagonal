@@ -7,13 +7,14 @@ import (
 	"os/signal"
 	"syscall"
 
-	settingsfactory "github.com/bxcodec/golang-ddd-modular-monolith-with-hexagonal/modules/payment-settings/factory"
-	paymentfactory "github.com/bxcodec/golang-ddd-modular-monolith-with-hexagonal/modules/payment/factory"
-	"github.com/bxcodec/golang-ddd-modular-monolith-with-hexagonal/pkg/middlewares"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
+
+	settingsfactory "github.com/bxcodec/golang-ddd-modular-monolith-with-hexagonal/modules/payment-settings/factory"
+	paymentfactory "github.com/bxcodec/golang-ddd-modular-monolith-with-hexagonal/modules/payment/factory"
+	"github.com/bxcodec/golang-ddd-modular-monolith-with-hexagonal/pkg/middlewares"
 )
 
 var restCmd = &cobra.Command{
