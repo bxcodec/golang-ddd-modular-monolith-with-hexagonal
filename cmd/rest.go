@@ -1,92 +1,103 @@
 package cmd
 
 import (
-	"log"
-	"time"
+	"context"
+	"os"
+	"os/signal"
+	"syscall"
 
 	settingsfactory "github.com/bxcodec/golang-ddd-modular-monolith-with-hexagonal/modules/payment-settings/factory"
 	paymentfactory "github.com/bxcodec/golang-ddd-modular-monolith-with-hexagonal/modules/payment/factory"
 	"github.com/bxcodec/golang-ddd-modular-monolith-with-hexagonal/pkg/middlewares"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
+	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 )
 
-var (
-	// REST server configuration
-	restPort string
-)
-
-// restCmd represents the rest command
 var restCmd = &cobra.Command{
 	Use:   "rest",
 	Short: "Start the REST API server",
 	Long: `Start the REST API server to handle HTTP requests.
 
 This command initializes the application modules and starts an HTTP server
-using the Echo framework.
+using the Echo framework with graceful shutdown support.
 
 Example:
-  engine rest --port 8080
-  engine rest --db-host localhost --db-port 5432`,
+  payment-app rest
+  payment-app rest --config .env.production`,
 	RunE: runREST,
 }
 
 func init() {
 	rootCmd.AddCommand(restCmd)
-
-	// REST-specific flags
-	restCmd.Flags().StringVarP(&restPort, "port", "p", "8080", "Port to run the REST API server")
 }
 
 func runREST(cmd *cobra.Command, args []string) (err error) {
-	log.Println("Starting REST API server...")
-
-	// Get database connection from root command
+	cfg := GetConfig()
 	db := GetDB()
 
-	// Initialize modules in dependency order (like Nest.js)
-	// Factory handles ALL the wiring: hexagon core + adapters
+	log.Info().Msg("Initializing REST API server")
 
-	// 1. Payment Settings module (no dependencies)
 	paymentSettingsModule := settingsfactory.NewModule(settingsfactory.ModuleConfig{
 		DB: db,
 	})
 
-	// 2. Payment module (depends on Payment Settings)
 	paymentModule := paymentfactory.NewModule(paymentfactory.ModuleConfig{
 		DB:                  db,
 		PaymentSettingsPort: paymentSettingsModule.Service,
 	})
 
-	// Setup HTTP server and register module routes
 	e := echo.New()
-	e.Use(middleware.Logger())
+	e.HideBanner = true
+	e.HidePort = true
+	e.HTTPErrorHandler = middlewares.ErrorHandler
+
+	if !cfg.IsProduction() {
+		e.Use(middleware.Logger())
+	}
 	e.Use(middleware.Recover())
 	e.Use(middlewares.CORS())
-	e.Use(middlewares.SetRequestContextWithTimeout(10 * time.Second))
+	e.Use(middlewares.SetRequestContextWithTimeout(cfg.Server.ReadTimeout))
 
-	// Health check endpoint
 	e.GET("/health", func(c echo.Context) error {
 		return c.JSON(200, map[string]string{
-			"status": "ok",
-			"mode":   "rest",
+			"status":      "ok",
+			"mode":        "rest",
+			"environment": cfg.App.Environment,
 		})
 	})
 
-	// Register module HTTP handlers (inbound adapters)
 	api := e.Group("/api/v1")
 	paymentModule.RegisterHTTPHandlers(api)
 	paymentSettingsModule.RegisterHTTPHandlers(api)
 
-	// Start server
-	log.Printf("REST API server listening on port %s\n", restPort)
-	log.Printf("Health check: http://localhost:%s/health\n", restPort)
-	log.Printf("API endpoints: http://localhost:%s/api/v1\n", restPort)
+	go func() {
+		log.Info().
+			Str("port", cfg.Server.Port).
+			Str("health_check", "http://localhost:"+cfg.Server.Port+"/health").
+			Str("api_base", "http://localhost:"+cfg.Server.Port+"/api/v1").
+			Msg("REST API server started")
 
-	if err := e.Start(":" + restPort); err != nil {
+		if err := e.Start(":" + cfg.Server.Port); err != nil {
+			log.Error().Err(err).Msg("Server stopped")
+		}
+	}()
+
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, os.Interrupt, syscall.SIGTERM)
+	<-quit
+
+	log.Info().Msg("Shutting down server gracefully")
+
+	ctx, cancel := context.WithTimeout(context.Background(), cfg.Server.ShutdownTimeout)
+	defer cancel()
+
+	if err := e.Shutdown(ctx); err != nil {
+		log.Error().Err(err).Msg("Server shutdown failed")
 		return err
 	}
 
+	log.Info().Msg("Server shutdown complete")
 	return nil
 }

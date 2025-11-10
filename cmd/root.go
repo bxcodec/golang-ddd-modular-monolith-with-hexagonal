@@ -3,28 +3,21 @@ package cmd
 import (
 	"database/sql"
 	"fmt"
-	"log"
 	"os"
-	"time"
 
+	"github.com/bxcodec/golang-ddd-modular-monolith-with-hexagonal/pkg/config"
+	"github.com/bxcodec/golang-ddd-modular-monolith-with-hexagonal/pkg/logger"
 	_ "github.com/lib/pq"
+	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 )
 
 var (
-	// Database configuration flags
-	dbHost     string
-	dbPort     string
-	dbUser     string
-	dbPassword string
-	dbName     string
-	dbSSLMode  string
-
-	// Shared database connection
-	db *sql.DB
+	cfgFile string
+	cfg     *config.Config
+	db      *sql.DB
 )
 
-// rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
 	Use:   "payment-app",
 	Short: "Payment application with DDD and Hexagonal Architecture",
@@ -34,73 +27,74 @@ and Hexagonal Architecture principles.
 This application supports multiple execution modes:
   - REST API server for handling HTTP requests
   - Cron jobs for scheduled payment updates`,
-	PersistentPreRunE:  initDatabase,
-	PersistentPostRunE: closeDatabase,
+	PersistentPreRunE:  initApp,
+	PersistentPostRunE: cleanupApp,
 }
 
-// Execute adds all child commands to the root command and sets flags appropriately.
-// This is called by main.main(). It only needs to happen once to the rootCmd.
 func Execute() {
-	err := rootCmd.Execute()
-	if err != nil {
+	if err := rootCmd.Execute(); err != nil {
+		log.Fatal().Err(err).Msg("Application execution failed")
 		os.Exit(1)
 	}
 }
 
 func init() {
-	// Database configuration flags
-	rootCmd.PersistentFlags().StringVar(&dbHost, "db-host", getEnv("POSTGRES_HOST", "127.0.0.1"), "Database host")
-	rootCmd.PersistentFlags().StringVar(&dbPort, "db-port", getEnv("POSTGRES_PORT", "5432"), "Database port")
-	rootCmd.PersistentFlags().StringVar(&dbUser, "db-user", getEnv("POSTGRES_USER", "user"), "Database user")
-	rootCmd.PersistentFlags().StringVar(&dbPassword, "db-password", getEnv("POSTGRES_PASSWORD", "password"), "Database password")
-	rootCmd.PersistentFlags().StringVar(&dbName, "db-name", getEnv("POSTGRES_DB", "payment"), "Database name")
-	rootCmd.PersistentFlags().StringVar(&dbSSLMode, "db-sslmode", getEnv("POSTGRES_SSLMODE", "disable"), "Database SSL mode")
+	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", ".env", "Config file path (supports .env files)")
 }
 
-// initDatabase initializes the database connection
-func initDatabase(cmd *cobra.Command, args []string) (err error) {
-	// Create PostgreSQL connection string
-	dsn := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=%s",
-		dbHost, dbPort, dbUser, dbPassword, dbName, dbSSLMode)
+func initApp(cmd *cobra.Command, args []string) (err error) {
+	cfg, err = config.Load(cfgFile)
+	if err != nil {
+		return fmt.Errorf("failed to load configuration: %w", err)
+	}
 
-	// Initialize database
-	db, err = sql.Open("postgres", dsn)
+	logger.Init(logger.Config{
+		Level:       cfg.App.LogLevel,
+		Environment: cfg.App.Environment,
+	})
+
+	log.Info().
+		Str("app", cfg.App.Name).
+		Str("environment", cfg.App.Environment).
+		Str("log_level", cfg.App.LogLevel).
+		Msg("Starting application")
+
+	db, err = sql.Open("postgres", cfg.DatabaseDSN())
 	if err != nil {
 		return fmt.Errorf("failed to open database connection: %w", err)
 	}
 
-	// Configure connection pool
-	db.SetMaxOpenConns(25)
-	db.SetMaxIdleConns(5)
-	db.SetConnMaxLifetime(5 * time.Minute)
+	db.SetMaxOpenConns(cfg.Database.MaxOpenConns)
+	db.SetMaxIdleConns(cfg.Database.MaxIdleConns)
+	db.SetConnMaxLifetime(cfg.Database.ConnMaxLifetime)
 
-	// Test database connection
 	if err = db.Ping(); err != nil {
 		return fmt.Errorf("failed to ping database: %w", err)
 	}
 
-	log.Println("Successfully connected to PostgreSQL database")
+	log.Info().
+		Str("host", cfg.Database.Host).
+		Str("port", cfg.Database.Port).
+		Str("database", cfg.Database.Name).
+		Int("max_open_conns", cfg.Database.MaxOpenConns).
+		Int("max_idle_conns", cfg.Database.MaxIdleConns).
+		Msg("Successfully connected to PostgreSQL database")
+
 	return nil
 }
 
-// closeDatabase closes the database connection
-func closeDatabase(cmd *cobra.Command, args []string) (err error) {
+func cleanupApp(cmd *cobra.Command, args []string) (err error) {
 	if db != nil {
-		log.Println("Closing database connection...")
+		log.Info().Msg("Closing database connection")
 		return db.Close()
 	}
 	return nil
 }
 
-// GetDB returns the shared database connection
-func GetDB() (database *sql.DB) {
+func GetDB() *sql.DB {
 	return db
 }
 
-// getEnv retrieves an environment variable or returns a default value
-func getEnv(key string, defaultValue string) (value string) {
-	if value := os.Getenv(key); value != "" {
-		return value
-	}
-	return defaultValue
+func GetConfig() *config.Config {
+	return cfg
 }

@@ -3,10 +3,10 @@ package middlewares
 import (
 	"context"
 	"errors"
-	"log"
 	"net/http"
 
 	"github.com/labstack/echo/v4"
+	"github.com/rs/zerolog/log"
 
 	apperrors "github.com/bxcodec/golang-ddd-modular-monolith-with-hexagonal/pkg/errors"
 )
@@ -37,6 +37,12 @@ func ErrorHandler(err error, c echo.Context) {
 		return
 	}
 
-	log.Printf("ERROR: Unexpected error occurred: %v", err)
+	log.Error().
+		Err(err).
+		Str("method", c.Request().Method).
+		Str("path", c.Request().URL.Path).
+		Str("ip", c.RealIP()).
+		Msg("Unexpected error occurred")
+
 	c.JSON(http.StatusInternalServerError, apperrors.ErrInternalServerError)
 }

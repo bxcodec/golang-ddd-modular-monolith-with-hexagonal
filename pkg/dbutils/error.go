@@ -2,10 +2,10 @@ package dbutils
 
 import (
 	"database/sql"
-	"log"
 
 	"github.com/bxcodec/golang-ddd-modular-monolith-with-hexagonal/pkg/errors"
 	"github.com/lib/pq"
+	"github.com/rs/zerolog/log"
 )
 
 func HandlePostgresError(err error) error {
@@ -24,10 +24,18 @@ func HandlePostgresError(err error) error {
 
 	switch pqErr.Code {
 	case "23505":
-		log.Printf("ERROR: Duplicate key violation: %v", err)
+		log.Error().
+			Str("code", string(pqErr.Code)).
+			Str("constraint", pqErr.Constraint).
+			Str("detail", pqErr.Detail).
+			Msg("Duplicate key violation")
 		return errors.ErrDuplicatedData
 	default:
-		log.Printf("ERROR: Postgres error occurred: %v", err)
+		log.Error().
+			Str("code", string(pqErr.Code)).
+			Str("message", pqErr.Message).
+			Str("detail", pqErr.Detail).
+			Msg("Postgres error occurred")
 	}
 
 	return err
