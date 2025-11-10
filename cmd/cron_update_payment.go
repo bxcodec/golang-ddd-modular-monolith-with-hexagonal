@@ -34,12 +34,20 @@ Cron schedule example (runs every hour):
 func init() {
 	rootCmd.AddCommand(cronUpdatePaymentCmd)
 
-	cronUpdatePaymentCmd.Flags().IntVar(&batchSize, "batch-size", 50, "Number of payments to process in one batch")
-	cronUpdatePaymentCmd.Flags().BoolVar(&dryRun, "dry-run", false, "Run in dry-run mode (no actual updates)")
+	cronUpdatePaymentCmd.Flags().IntVar(&batchSize, "batch-size", 0, "Number of payments to process in one batch (overrides CRON_BATCH_SIZE)")
+	cronUpdatePaymentCmd.Flags().BoolVar(&dryRun, "dry-run", false, "Run in dry-run mode (overrides CRON_DRY_RUN)")
 }
 
 func runCronUpdatePayment(cmd *cobra.Command, args []string) (err error) {
+	cfg := GetConfig()
 	db := GetDB()
+
+	if batchSize == 0 {
+		batchSize = cfg.Cron.BatchSize
+	}
+	if !dryRun {
+		dryRun = cfg.Cron.DryRun
+	}
 
 	log.Info().
 		Int("batch_size", batchSize).

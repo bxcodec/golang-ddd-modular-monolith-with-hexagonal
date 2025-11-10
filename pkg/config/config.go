@@ -13,6 +13,7 @@ type Config struct {
 	Database DatabaseConfig
 	Server   ServerConfig
 	App      AppConfig
+	Cron     CronConfig
 }
 
 type DatabaseConfig struct {
@@ -39,6 +40,11 @@ type AppConfig struct {
 	Environment string
 	LogLevel    string
 	Debug       bool
+}
+
+type CronConfig struct {
+	BatchSize int
+	DryRun    bool
 }
 
 func Load(envFiles ...string) (cfg *Config, err error) {
@@ -73,6 +79,10 @@ func Load(envFiles ...string) (cfg *Config, err error) {
 			Environment: getEnv("APP_ENV", "development"),
 			LogLevel:    getEnv("LOG_LEVEL", "info"),
 			Debug:       getEnvAsBool("DEBUG", false),
+		},
+		Cron: CronConfig{
+			BatchSize: getEnvAsInt("CRON_BATCH_SIZE", 50),
+			DryRun:    getEnvAsBool("CRON_DRY_RUN", false),
 		},
 	}
 
