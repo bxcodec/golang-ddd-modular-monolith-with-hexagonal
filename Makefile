@@ -98,11 +98,19 @@ TESTS_ARGS += -test.coverprofile   coverage.out
 TESTS_ARGS += -test.timeout        5s
 TESTS_ARGS += -race
 
-tests: $(GOTESTSUM)
+tests: test-unit ## Run unit tests by default
+
+test-unit: $(GOTESTSUM) ## Run only unit tests (excludes e2e)
 	@ gotestsum $(TESTS_ARGS) -short
 
-tests-complete: tests $(TPARSE) ## Run Tests & parse details
-	@cat gotestsum.json.out | $(TPARSE) -all -notests
+test-e2e: $(GOTESTSUM) ## Run only E2E tests
+	@ gotestsum --format testname --jsonfile gotestsum-e2e.json.out -- -tags=e2e -test.parallel 1 -test.count 1 -test.timeout 5m -test.coverprofile coverage-e2e.out ./...
+
+test-all: $(GOTESTSUM) ## Run all tests (unit + e2e)
+	@ gotestsum --format testname --jsonfile gotestsum-all.json.out -- -tags=e2e -test.parallel 1 -test.count 1 -test.timeout 5m -test.coverprofile coverage-all.out -race ./...
+
+tests-complete: test-all $(TPARSE) ## Run Tests & parse details
+	@cat gotestsum-all.json.out | $(TPARSE) -all -notests
 
 # ~~~ Docker Build ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
