@@ -1,0 +1,369 @@
+version: "2"
+
+formatters:
+  enable:
+    - gofmt
+    - gofumpt
+    - goimports
+
+  settings:
+    goimports:
+      local-prefixes: github.com/bxcodec/golang-ddd-modular-monolith-with-hexagonal
+
+linters:
+  default: standard
+  enable:
+    - errcheck
+    - govet
+    - ineffassign
+    - staticcheck
+    - unused
+    - bodyclose
+    - contextcheck
+    - copyloopvar
+    - dogsled
+    - dupl
+    - durationcheck
+    - err113
+    - errchkjson
+    - errname
+    - errorlint
+    - exhaustive
+    - gocheckcompilerdirectives
+    - gochecknoinits
+    - gocognit
+    - goconst
+    - gocritic
+    - gocyclo
+    - godot
+    - goprintffuncname
+    - gosec
+    - grouper
+    - importas
+    - ireturn
+    - loggercheck
+    - makezero
+    - mirror
+    - misspell
+    - nakedret
+    - nilerr
+    - nilnil
+    - noctx
+    - nolintlint
+    - nonamedreturns
+    - nosprintfhostport
+    - perfsprint
+    - prealloc
+    - predeclared
+    - reassign
+    - revive
+    - rowserrcheck
+    - sloglint
+    - sqlclosecheck
+    - testifylint
+    - thelper
+    - unconvert
+    - unparam
+    - usestdlibvars
+    - wastedassign
+    - whitespace
+    - wrapcheck
+    - zerologlint
+
+  disable:
+    - gochecknoglobals
+    - exhaustruct
+    - varnamelen
+    - nlreturn
+    - testpackage
+    - paralleltest
+    - funlen
+    - cyclop
+    - forbidigo
+    - godox
+    - nonamedreturns
+    - testifylint
+    - thelper
+    - wrapcheck
+    - godot
+    - err113
+    - noctx
+    - ireturn
+    - nakedret
+    - perfsprint
+    - gochecknoinits
+
+  settings:
+    errcheck:
+      check-type-assertions: true
+      check-blank: false
+      exclude-functions:
+        - io/ioutil.ReadFile
+        - io.Copy(*bytes.Buffer)
+        - io.Copy(os.Stdout)
+
+    govet:
+      enable-all: true
+      disable:
+        - fieldalignment
+        - shadow
+
+    gocyclo:
+      min-complexity: 15
+
+    gocognit:
+      min-complexity: 20
+
+    dupl:
+      threshold: 100
+
+    goconst:
+      min-len: 3
+      min-occurrences: 3
+      ignore-tests: true
+
+    misspell:
+      locale: US
+      ignore-words:
+        - cancelled
+
+    nakedret:
+      max-func-lines: 0
+
+    prealloc:
+      simple: true
+      range-loops: true
+      for-loops: true
+
+    nolintlint:
+      allow-unused: false
+      require-explanation: true
+      require-specific: true
+
+    revive:
+      enable-all-rules: false
+      rules:
+        - name: context-as-argument
+        - name: dot-imports
+        - name: error-return
+        - name: error-strings
+        - name: error-naming
+        - name: increment-decrement
+        - name: var-naming
+          arguments:
+            - ["ID", "URL", "HTTP", "JSON", "API", "DB", "SQL"]
+        - name: range
+        - name: receiver-naming
+        - name: indent-error-flow
+        - name: errorf
+        - name: empty-block
+        - name: superfluous-else
+        - name: unreachable-code
+        - name: redefines-builtin-id
+        - name: if-return
+        - name: early-return
+
+    gocritic:
+      enabled-tags:
+        - diagnostic
+        - performance
+      disabled-checks:
+        - hugeParam
+        - rangeValCopy
+        - exitAfterDefer
+        - commentFormatting
+        - sloppyReassign
+
+    gosec:
+      excludes:
+        - G404
+        - G304
+        - G111
+        - G115
+
+    errorlint:
+      errorf: true
+      asserts: true
+      comparison: true
+
+    exhaustive:
+      check:
+        - switch
+        - map
+      default-signifies-exhaustive: true
+
+    zerologlint:
+      check-any-of-msg-fields: ["msg", "message"]
+
+    loggercheck:
+      kitlog: false
+      klog: false
+      logr: false
+      zap: false
+      zerolog: true
+      require-string-key: true
+      no-printf-like: true
+
+    importas:
+      no-unaliased: false
+      alias:
+        - pkg: github.com/rs/zerolog/log
+          alias: log
+
+issues:
+  max-issues-per-linter: 0
+  max-same-issues: 0
+
+  exclude-rules:
+    - path: _test\.go
+      linters:
+        - dupl
+        - gosec
+        - goconst
+        - wrapcheck
+        - err113
+        - revive
+        - testifylint
+
+    - path: mocks/
+      linters:
+        - all
+
+    - path: factory/
+      linters:
+        - ireturn
+
+    - path: cmd/
+      linters:
+        - gochecknoinits
+        - wrapcheck
+        - revive
+        - errcheck
+
+    - path: migrations/
+      linters:
+        - all
+
+    - path: pkg/testutils/
+      linters:
+        - errcheck
+        - gosec
+        - wrapcheck
+
+    - path: internal/adapter/controller/
+      linters:
+        - wrapcheck
+        - revive
+
+    - path: internal/adapter/controller/dto/
+      linters:
+        - revive
+
+    - path: internal/ports/
+      linters:
+        - revive
+
+    - path: internal/service/
+      linters:
+        - wrapcheck
+
+    - text: "Error return value of .((os\\.)?std(out|err)\\..*|.*Close|.*Flush|os\\.Remove(All)?|.*print(f|ln)?|os\\.(Un)?Setenv). is not checked"
+      linters:
+        - errcheck
+
+    - text: "Error return value of `c.JSON` is not checked"
+      linters:
+        - errcheck
+      path: (middlewares/error_handler|testutils/helpers)\\.go
+
+    - text: "unnecessary leading newline"
+      linters:
+        - whitespace
+
+    - text: "G104:"
+      linters:
+        - gosec
+
+    - text: "ST1000:"
+      linters:
+        - stylecheck
+
+    - source: "//\\s*go:generate\\s"
+      linters:
+        - lll
+
+    - source: "^\\s*//\\s*(nolint|TODO|FIXME)"
+      linters:
+        - godot
+
+    - text: "File is not properly formatted"
+      linters:
+        - goimports
+        - gofumpt
+
+    - text: "import .* imported without alias"
+      linters:
+        - importas
+
+    - text: "string-format:"
+      linters:
+        - perfsprint
+
+    - text: "integer-format:"
+      linters:
+        - perfsprint
+
+  exclude-dirs:
+    - bin
+    - tmp
+    - vendor
+
+  exclude-files:
+    - ".*\\.pb\\.go$"
+    - ".*\\.gen\\.go$"
+
+output:
+  formats:
+    text:
+      path: stdout
+      print-linter-name: true
+      print-issued-lines: true
+      colors: true
+  sort-order:
+    - linter
+    - severity
+    - file
+  show-stats: true
+
+run:
+  timeout: 5m
+  relative-path-mode: gomod
+  issues-exit-code: 1
+  tests: true
+  build-tags:
+    - integration
+  modules-download-mode: readonly
+  allow-parallel-runners: false
+  go: "1.24"
+  concurrency: 4
+
+severity:
+  default: error
+  rules:
+    - linters:
+        - errcheck
+        - gosec
+        - govet
+        - staticcheck
+      severity: error
+
+    - linters:
+        - dupl
+        - goconst
+        - misspell
+      severity: warning
+
+    - linters:
+        - godot
+        - whitespace
+      severity: info

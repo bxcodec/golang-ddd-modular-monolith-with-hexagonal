@@ -30,3 +30,16 @@ go.work.sum
 # Editor/IDE
 # .idea/
 # .vscode/
+app
+bin/*
+
+# Air tmp directory
+tmp/
+tmp_app/
+
+# Build artifacts
+engine
+air_errors.log
+
+# Generated mocks
+**/mocks/

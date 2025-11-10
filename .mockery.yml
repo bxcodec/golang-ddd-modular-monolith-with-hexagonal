@@ -1,0 +1,11 @@
+include-auto-generated: true
+all: false
+dir: "{{.InterfaceDir}}/mocks"
+filename: "mock_{{.InterfaceName}}.go"
+structname: "Mock{{.InterfaceName}}"
+pkgname: mocks
+packages:
+  github.com/bxcodec/golang-ddd-modular-monolith-with-hexagonal/modules:
+    config:
+      all: true
+      recursive: true
