@@ -28,10 +28,10 @@ type ModuleConfig struct {
 // NewModule assembles and wires the complete Payment Settings module using dependency injection.
 //
 // This is where hexagonal architecture comes together:
-//   1. Create outbound adapters (repository for database access)
-//   2. Inject adapters into the core service (hexagon)
-//   3. Create inbound adapters (HTTP controller)
-//   4. Return the module with all components connected
+//  1. Create outbound adapters (repository for database access)
+//  2. Inject adapters into the core service (hexagon)
+//  3. Create inbound adapters (HTTP controller)
+//  4. Return the module with all components connected
 //
 // The result is a fully independent module that can be deployed as part of a monolith.
 func NewModule(config ModuleConfig) *paymentsettings.Module {

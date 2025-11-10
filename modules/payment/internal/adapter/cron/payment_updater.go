@@ -2,8 +2,9 @@ package cron
 
 import (
 	"fmt"
-	"log"
 	"time"
+
+	"github.com/rs/zerolog/log"
 
 	"github.com/bxcodec/golang-ddd-modular-monolith-with-hexagonal/modules/payment"
 )
@@ -46,14 +47,18 @@ func (u *PaymentUpdater) Execute() (resultData interface{}, err error) {
 		Errors:    make([]error, 0),
 	}
 
-	log.Printf("=== Payment Update Cron Job Started at %s ===\n", result.StartTime.Format(time.RFC3339))
+	log.Info().
+		Str("started_at", result.StartTime.Format(time.RFC3339)).
+		Msg("Payment update cron job started")
 
 	if u.config.DryRun {
-		log.Println("Running in DRY-RUN mode - no actual updates will be performed")
+		log.Info().Msg("Running in DRY-RUN mode. No actual updates will be performed")
 	}
 
-	// Fetch pending payments
-	log.Printf("Fetching payments (batch size: %d)...\n", u.config.BatchSize)
+	log.Info().
+		Int("batch_size", u.config.BatchSize).
+		Msg("Fetching pending payments")
+
 	payments, _, err := u.paymentService.FetchPayments(payment.FetchPaymentsParams{
 		Limit:  u.config.BatchSize,
 		Status: "pending",
@@ -62,10 +67,12 @@ func (u *PaymentUpdater) Execute() (resultData interface{}, err error) {
 		return nil, fmt.Errorf("failed to fetch payments: %w", err)
 	}
 
-	log.Printf("Found %d payment(s) to process\n", len(payments))
+	log.Info().
+		Int("count", len(payments)).
+		Msg("Found payments to process")
 
 	if len(payments) == 0 {
-		log.Println("No payments to process")
+		log.Info().Msg("No payments to process")
 		result.EndTime = time.Now()
 		result.Duration = result.EndTime.Sub(result.StartTime)
 		return result, nil
@@ -74,18 +81,29 @@ func (u *PaymentUpdater) Execute() (resultData interface{}, err error) {
 	// Process payments
 	for i, p := range payments {
 		if i >= u.config.BatchSize {
-			log.Printf("Batch size limit reached (%d), stopping processing\n", u.config.BatchSize)
+			log.Info().
+				Int("batch_size", u.config.BatchSize).
+				Msg("Batch size limit reached. Stopping processing")
 			break
 		}
 
 		result.ProcessedCount++
 
-		log.Printf("[%d/%d] Processing payment ID: %s (Status: %s, Amount: %.2f %s)\n",
-			i+1, len(payments), p.ID, p.Status, p.Amount, p.Currency)
+		log.Info().
+			Int("current", i+1).
+			Int("total", len(payments)).
+			Str("payment_id", p.ID).
+			Str("status", p.Status).
+			Float64("amount", p.Amount).
+			Str("currency", p.Currency).
+			Msg("Processing payment")
 
 		// Apply business logic for payment updates
 		if err := u.processPayment(&p); err != nil {
-			log.Printf("ERROR: Failed to process payment %s: %v\n", p.ID, err)
+			log.Error().
+				Err(err).
+				Str("payment_id", p.ID).
+				Msg("Failed to process payment")
 			result.ErrorCount++
 			result.Errors = append(result.Errors, fmt.Errorf("payment %s: %w", p.ID, err))
 			continue
@@ -111,13 +129,18 @@ func (u *PaymentUpdater) Execute() (resultData interface{}, err error) {
 func (u *PaymentUpdater) processPayment(p *payment.Payment) (err error) {
 	// Skip payments that don't need processing
 	if p.Status != "pending" {
-		log.Printf("INFO: Skipped payment %s (status: %s)\n", p.ID, p.Status)
+		log.Info().
+			Str("payment_id", p.ID).
+			Str("status", p.Status).
+			Msg("Skipped payment. Status is not pending")
 		return nil
 	}
 
 	// Handle dry-run mode
 	if u.config.DryRun {
-		log.Printf("INFO: [DRY-RUN] Would update payment %s to processing\n", p.ID)
+		log.Info().
+			Str("payment_id", p.ID).
+			Msg("DRY-RUN mode. Would update payment to processing")
 		return nil
 	}
 
@@ -126,21 +149,36 @@ func (u *PaymentUpdater) processPayment(p *payment.Payment) (err error) {
 	if err = u.paymentService.UpdatePayment(p); err != nil {
 		return fmt.Errorf("failed to update payment: %w", err)
 	}
-	log.Printf("INFO: Updated payment %s to processing\n", p.ID)
+
+	log.Info().
+		Str("payment_id", p.ID).
+		Str("new_status", "processing").
+		Msg("Updated payment status")
 	return nil
 }
 
 // printSummary prints the execution summary
 func (u *PaymentUpdater) printSummary(result *ExecutionResult) {
-	log.Println("\n=== Payment Update Cron Job Summary ===")
-	log.Printf("Duration: %s\n", result.Duration)
-	log.Printf("Processed: %d payment(s)\n", result.ProcessedCount)
-	log.Printf("Success: %d\n", result.SuccessCount)
 	if result.ErrorCount > 0 {
-		log.Printf("Errors: %d\n", result.ErrorCount)
+		log.Warn().
+			Str("completed_at", result.EndTime.Format(time.RFC3339)).
+			Dur("duration", result.Duration).
+			Int("processed", result.ProcessedCount).
+			Int("success", result.SuccessCount).
+			Int("errors", result.ErrorCount).
+			Str("status", u.getJobStatus(result.ErrorCount)).
+			Msg("Payment update cron job completed")
+		return
 	}
-	log.Printf("Status: %s\n", u.getJobStatus(result.ErrorCount))
-	log.Printf("=== Cron Job Completed at %s ===\n", result.EndTime.Format(time.RFC3339))
+
+	log.Info().
+		Str("completed_at", result.EndTime.Format(time.RFC3339)).
+		Dur("duration", result.Duration).
+		Int("processed", result.ProcessedCount).
+		Int("success", result.SuccessCount).
+		Int("errors", result.ErrorCount).
+		Str("status", u.getJobStatus(result.ErrorCount)).
+		Msg("Payment update cron job completed")
 }
 
 // getJobStatus returns a status string based on error count
