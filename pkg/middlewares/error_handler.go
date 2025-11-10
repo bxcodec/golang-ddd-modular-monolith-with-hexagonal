@@ -21,19 +21,19 @@ func ErrorHandler(err error, c echo.Context) {
 	}
 
 	if errors.Is(err, context.DeadlineExceeded) || errors.Is(err, context.Canceled) {
-		c.JSON(http.StatusRequestTimeout, apperrors.ErrRequestTimeout)
+		_ = c.JSON(http.StatusRequestTimeout, apperrors.ErrRequestTimeout)
 		return
 	}
 
 	var echoErr *echo.HTTPError
 	if errors.As(err, &echoErr) {
-		c.JSON(echoErr.Code, apperrors.EchoToHTTPError(echoErr.Code, echoErr.Message))
+		_ = c.JSON(echoErr.Code, apperrors.EchoToHTTPError(echoErr.Code, echoErr.Message))
 		return
 	}
 
 	var domainError *apperrors.Error
 	if errors.As(err, &domainError) && http.StatusText(domainError.Status()) != "" {
-		c.JSON(domainError.Status(), domainError)
+		_ = c.JSON(domainError.Status(), domainError)
 		return
 	}
 
@@ -44,5 +44,5 @@ func ErrorHandler(err error, c echo.Context) {
 		Str("ip", c.RealIP()).
 		Msg("Unexpected error occurred")
 
-	c.JSON(http.StatusInternalServerError, apperrors.ErrInternalServerError)
+	_ = c.JSON(http.StatusInternalServerError, apperrors.ErrInternalServerError)
 }

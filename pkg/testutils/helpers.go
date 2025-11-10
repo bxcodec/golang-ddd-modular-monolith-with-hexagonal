@@ -3,6 +3,7 @@ package testutils
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -63,9 +64,12 @@ func NewEchoForTest() *echo.Echo {
 		code := http.StatusInternalServerError
 		message := err.Error()
 
-		if he, ok := err.(*echo.HTTPError); ok {
+		var he *echo.HTTPError
+		if errors.As(err, &he) {
 			code = he.Code
-			message = he.Message.(string)
+			if msg, ok := he.Message.(string); ok {
+				message = msg
+			}
 		} else {
 			type statusCoder interface {
 				Status() int
@@ -75,7 +79,7 @@ func NewEchoForTest() *echo.Echo {
 			}
 		}
 
-		c.JSON(code, map[string]string{"error": message})
+		_ = c.JSON(code, map[string]string{"error": message})
 	}
 	return e
 }

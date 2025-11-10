@@ -78,7 +78,7 @@ linters:
     - testpackage
     - paralleltest
     - funlen
-    # - cyclop
+    - cyclop
     - forbidigo
     - godox
     - nonamedreturns
@@ -96,7 +96,7 @@ linters:
   settings:
     errcheck:
       check-type-assertions: true
-      check-blank: true
+      check-blank: false
       exclude-functions:
         - io/ioutil.ReadFile
         - io.Copy(*bytes.Buffer)
@@ -168,16 +168,11 @@ linters:
         - diagnostic
         - performance
       disabled-checks:
-        - whyNoLint
         - hugeParam
         - rangeValCopy
         - exitAfterDefer
         - commentFormatting
-        - importShadow
         - sloppyReassign
-        - captLocal
-        - paramTypeCombine
-        - httpNoBody
 
     gosec:
       excludes:
@@ -275,6 +270,11 @@ issues:
     - text: "Error return value of .((os\\.)?std(out|err)\\..*|.*Close|.*Flush|os\\.Remove(All)?|.*print(f|ln)?|os\\.(Un)?Setenv). is not checked"
       linters:
         - errcheck
+
+    - text: "Error return value of `c.JSON` is not checked"
+      linters:
+        - errcheck
+      path: (middlewares/error_handler|testutils/helpers)\\.go
 
     - text: "unnecessary leading newline"
       linters:

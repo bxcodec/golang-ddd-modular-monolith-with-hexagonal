@@ -5,6 +5,7 @@ import (
 	"time"
 
 	sq "github.com/Masterminds/squirrel"
+	"github.com/rs/zerolog/log"
 
 	"github.com/bxcodec/golang-ddd-modular-monolith-with-hexagonal/modules/payment"
 	"github.com/bxcodec/golang-ddd-modular-monolith-with-hexagonal/modules/payment/internal/ports"
@@ -92,7 +93,12 @@ func (r *paymentRepository) FetchPayments(params payment.FetchPaymentsParams) (r
 	if err != nil {
 		return nil, "", err
 	}
-	defer rows.Close()
+	defer func() {
+		errClose := rows.Close()
+		if errClose != nil {
+			log.Error().Err(errClose).Msg("failed to close rows")
+		}
+	}()
 
 	result = make([]payment.Payment, 0)
 	for rows.Next() {

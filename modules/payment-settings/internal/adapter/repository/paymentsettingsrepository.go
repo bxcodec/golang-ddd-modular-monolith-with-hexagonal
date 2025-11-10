@@ -5,6 +5,7 @@ import (
 	"time"
 
 	sq "github.com/Masterminds/squirrel"
+	"github.com/rs/zerolog/log"
 
 	paymentsettings "github.com/bxcodec/golang-ddd-modular-monolith-with-hexagonal/modules/payment-settings"
 	"github.com/bxcodec/golang-ddd-modular-monolith-with-hexagonal/pkg/dbutils"
@@ -59,7 +60,12 @@ func (r *PaymentSettingsRepository) FetchPaymentSettings(params paymentsettings.
 	if err != nil {
 		return nil, "", err
 	}
-	defer rows.Close()
+	defer func() {
+		errClose := rows.Close()
+		if errClose != nil {
+			log.Error().Err(errClose).Msg("failed to close rows")
+		}
+	}()
 
 	result = make([]paymentsettings.PaymentSetting, 0)
 	for rows.Next() {

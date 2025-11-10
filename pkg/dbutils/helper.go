@@ -3,11 +3,12 @@ package dbutils
 import (
 	"encoding/base64"
 	"encoding/json"
+	"errors"
 	"fmt"
 
 	"github.com/lib/pq"
 
-	"github.com/bxcodec/golang-ddd-modular-monolith-with-hexagonal/pkg/errors"
+	apperrors "github.com/bxcodec/golang-ddd-modular-monolith-with-hexagonal/pkg/errors"
 )
 
 func EncodeCursor(objectID string) (res string) {
@@ -17,7 +18,7 @@ func EncodeCursor(objectID string) (res string) {
 func DecodeCursor(cursor string) (res string, err error) {
 	dst, err := base64.StdEncoding.DecodeString(cursor)
 	if err != nil {
-		return "", errors.NewValidationError(fmt.Errorf("invalid cursor: %w", err))
+		return "", apperrors.NewValidationError(fmt.Errorf("invalid cursor: %w", err))
 	}
 	res = string(dst)
 	return res, nil
@@ -28,8 +29,8 @@ func IsDuplicatedData(err error) bool {
 		return false
 	}
 
-	pqErr, ok := err.(*pq.Error)
-	if !ok {
+	var pqErr *pq.Error
+	if !errors.As(err, &pqErr) {
 		return false
 	}
 
