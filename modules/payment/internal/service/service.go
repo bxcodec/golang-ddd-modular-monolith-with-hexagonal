@@ -36,19 +36,11 @@ func (s *PaymentService) GetPayment(id string) (result payment.Payment, err erro
 	if err != nil {
 		return payment.Payment{}, err
 	}
-	return *p, nil
+	return p, nil
 }
 
-func (s *PaymentService) GetPayments() (result []payment.Payment, nextCursor string, err error) {
-	payments, err := s.paymentRepo.GetPayments()
-	if err != nil {
-		return nil, "", err
-	}
-	result = make([]payment.Payment, len(payments))
-	for i, p := range payments {
-		result[i] = *p
-	}
-	return result, "", nil
+func (s *PaymentService) FetchPayments(params payment.FetchPaymentsParams) (result []payment.Payment, nextCursor string, err error) {
+	return s.paymentRepo.FetchPayments(params)
 }
 
 func (s *PaymentService) UpdatePayment(p *payment.Payment) (err error) {

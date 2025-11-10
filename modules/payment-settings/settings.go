@@ -4,18 +4,20 @@ import "time"
 
 // PaymentSettings represents payment configuration settings - your domain model
 type PaymentSetting struct {
-	ID        string
-	Amount    float64
-	Currency  string
-	Status    string
-	CreatedAt time.Time
-	UpdatedAt time.Time
+	ID           string    `json:"id"`
+	SettingKey   string    `json:"settingKey"`
+	SettingValue string    `json:"settingValue"`
+	Currency     string    `json:"currency"`
+	Status       string    `json:"status"`
+	CreatedAt    time.Time `json:"createdAt"`
+	UpdatedAt    time.Time `json:"updatedAt"`
 }
 
 type PaymentSettingFetchParams struct {
-	Currency string
-	Limit    int
-	Cursor   string
+	Currency   string `json:"currency"`
+	SettingKey string `json:"settingKey"`
+	Limit      int    `json:"limit"`
+	Cursor     string `json:"cursor"`
 }
 
 // IPaymentSettingsService defines the public API for payment settings operations

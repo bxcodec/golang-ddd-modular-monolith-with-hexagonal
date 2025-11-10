@@ -69,7 +69,7 @@ func Load(envFiles ...string) (cfg *Config, err error) {
 			ConnMaxLifetime: getEnvAsDuration("DB_CONN_MAX_LIFETIME", 5*time.Minute),
 		},
 		Server: ServerConfig{
-			Port:            getEnv("SERVER_PORT", "8080"),
+			Port:            getEnv("SERVER_PORT", "9090"),
 			ReadTimeout:     getEnvAsDuration("SERVER_READ_TIMEOUT", 10*time.Second),
 			WriteTimeout:    getEnvAsDuration("SERVER_WRITE_TIMEOUT", 10*time.Second),
 			ShutdownTimeout: getEnvAsDuration("SERVER_SHUTDOWN_TIMEOUT", 30*time.Second),

@@ -23,14 +23,18 @@ func NewPaymentSettingController(e *echo.Group, paymentSettingsService paymentse
 }
 
 func (c *paymentSettingController) FetchPaymentSettings(ctx echo.Context) (err error) {
-	limit, err := strconv.Atoi(ctx.QueryParam("limit"))
-	if err != nil {
-		return ctx.JSON(http.StatusBadRequest, err)
+	limit := 10
+	if limitParam := ctx.QueryParam("limit"); limitParam != "" {
+		if val, convErr := strconv.Atoi(limitParam); convErr == nil && val > 0 {
+			limit = val
+		}
 	}
+
 	params := paymentsettings.PaymentSettingFetchParams{
-		Currency: ctx.QueryParam("currency"),
-		Limit:    limit,
-		Cursor:   ctx.QueryParam("cursor"),
+		Currency:   ctx.QueryParam("currency"),
+		SettingKey: ctx.QueryParam("settingKey"),
+		Limit:      limit,
+		Cursor:     ctx.QueryParam("cursor"),
 	}
 	settings, nextCursor, err := c.paymentSettingsService.FetchPaymentSettings(params)
 	if err != nil {

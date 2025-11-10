@@ -54,7 +54,10 @@ func (u *PaymentUpdater) Execute() (resultData interface{}, err error) {
 
 	// Fetch pending payments
 	log.Printf("Fetching payments (batch size: %d)...\n", u.config.BatchSize)
-	payments, _, err := u.paymentService.GetPayments()
+	payments, _, err := u.paymentService.FetchPayments(payment.FetchPaymentsParams{
+		Limit:  u.config.BatchSize,
+		Status: "pending",
+	})
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch payments: %w", err)
 	}

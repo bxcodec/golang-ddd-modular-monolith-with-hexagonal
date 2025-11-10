@@ -7,11 +7,11 @@ import (
 )
 
 type CreatePaymentRequest struct {
-	Amount    float64
-	Currency  string
-	Status    string
-	CreatedAt time.Time
-	UpdatedAt time.Time
+	Amount    float64   `json:"amount"`
+	Currency  string    `json:"currency"`
+	Status    string    `json:"status"`
+	CreatedAt time.Time `json:"createdAt"`
+	UpdatedAt time.Time `json:"updatedAt"`
 }
 
 func (r *CreatePaymentRequest) ToPayment() payment.Payment {
@@ -35,11 +35,11 @@ func FromPaymentToCreateRequest(p payment.Payment) CreatePaymentRequest {
 }
 
 type UpdatePaymentRequest struct {
-	Amount    float64
-	Currency  string
-	Status    string
-	CreatedAt time.Time
-	UpdatedAt time.Time
+	Amount    float64   `json:"amount"`
+	Currency  string    `json:"currency"`
+	Status    string    `json:"status"`
+	CreatedAt time.Time `json:"createdAt"`
+	UpdatedAt time.Time `json:"updatedAt"`
 }
 
 func (r *UpdatePaymentRequest) ToPayment(id string) payment.Payment {

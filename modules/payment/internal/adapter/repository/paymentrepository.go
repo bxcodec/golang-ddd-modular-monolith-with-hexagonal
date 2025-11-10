@@ -48,49 +48,74 @@ func (r *paymentRepository) CreatePayment(p *payment.Payment) (err error) {
 	return nil
 }
 
-func (r *paymentRepository) GetPayment(id string) (p *payment.Payment, err error) {
-	var paymentData payment.Payment
-
+func (r *paymentRepository) GetPayment(id string) (p payment.Payment, err error) {
 	err = r.qb().Select("id", "amount", "currency", "status", "created_at", "updated_at").
 		From("payments").
 		Where(sq.Eq{"id": id}).
 		RunWith(r.db).
 		QueryRow().
-		Scan(&paymentData.ID, &paymentData.Amount, &paymentData.Currency, &paymentData.Status, &paymentData.CreatedAt, &paymentData.UpdatedAt)
+		Scan(&p.ID, &p.Amount, &p.Currency, &p.Status, &p.CreatedAt, &p.UpdatedAt)
 
 	if err != nil {
-		return nil, dbutils.HandlePostgresError(err)
+		return payment.Payment{}, dbutils.HandlePostgresError(err)
 	}
 
-	return &paymentData, nil
+	return p, nil
 }
 
-func (r *paymentRepository) GetPayments() (payments []*payment.Payment, err error) {
-	rows, err := r.qb().Select("id", "amount", "currency", "status", "created_at", "updated_at").
+func (r *paymentRepository) FetchPayments(params payment.FetchPaymentsParams) (result []payment.Payment, nextCursor string, err error) {
+	query := r.qb().Select("id", "amount", "currency", "status", "created_at", "updated_at").
 		From("payments").
-		OrderBy("created_at DESC").
-		RunWith(r.db).
-		Query()
+		OrderBy("id DESC")
 
+	// Apply cursor-based pagination using ULID
+	if params.Cursor != "" {
+		cursorID, decodeErr := dbutils.DecodeCursor(params.Cursor)
+		if decodeErr != nil {
+			return nil, "", decodeErr
+		}
+		query = query.Where(sq.Lt{"id": cursorID})
+	}
+
+	if params.Currency != "" {
+		query = query.Where(sq.Eq{"currency": params.Currency})
+	}
+
+	if params.Status != "" {
+		query = query.Where(sq.Eq{"status": params.Status})
+	}
+
+	// Fetch one extra to determine if there's a next page
+	query = query.Limit(uint64(params.Limit + 1))
+
+	rows, err := query.RunWith(r.db).Query()
 	if err != nil {
-		return nil, err
+		return nil, "", err
 	}
 	defer rows.Close()
 
-	payments = make([]*payment.Payment, 0)
+	result = make([]payment.Payment, 0)
 	for rows.Next() {
 		var p payment.Payment
 		if err := rows.Scan(&p.ID, &p.Amount, &p.Currency, &p.Status, &p.CreatedAt, &p.UpdatedAt); err != nil {
-			return nil, err
+			return nil, "", err
 		}
-		payments = append(payments, &p)
+		result = append(result, p)
 	}
 
 	if err := rows.Err(); err != nil {
-		return nil, err
+		return nil, "", err
 	}
 
-	return payments, nil
+	// Check if there are more results
+	if len(result) > params.Limit {
+		// Remove the extra item
+		result = result[:params.Limit]
+		// Set next cursor to the last item's ID
+		nextCursor = dbutils.EncodeCursor(result[len(result)-1].ID)
+	}
+
+	return result, nextCursor, nil
 }
 
 func (r *paymentRepository) UpdatePayment(p *payment.Payment) (err error) {

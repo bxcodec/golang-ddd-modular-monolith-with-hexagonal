@@ -7,38 +7,42 @@ import (
 )
 
 type CreatePaymentSettingRequest struct {
-	Amount    float64
-	Currency  string
-	Status    string
-	CreatedAt time.Time
-	UpdatedAt time.Time
+	SettingKey   string    `json:"settingKey"`
+	SettingValue string    `json:"settingValue"`
+	Currency     string    `json:"currency"`
+	Status       string    `json:"status"`
+	CreatedAt    time.Time `json:"createdAt"`
+	UpdatedAt    time.Time `json:"updatedAt"`
 }
 
 func (r *CreatePaymentSettingRequest) ToPaymentSetting() paymentsettings.PaymentSetting {
 	return paymentsettings.PaymentSetting{
-		Amount:    r.Amount,
-		Currency:  r.Currency,
-		Status:    r.Status,
-		CreatedAt: r.CreatedAt,
-		UpdatedAt: r.UpdatedAt,
+		SettingKey:   r.SettingKey,
+		SettingValue: r.SettingValue,
+		Currency:     r.Currency,
+		Status:       r.Status,
+		CreatedAt:    r.CreatedAt,
+		UpdatedAt:    r.UpdatedAt,
 	}
 }
 
 type UpdatePaymentSettingRequest struct {
-	Amount    float64
-	Currency  string
-	Status    string
-	CreatedAt time.Time
-	UpdatedAt time.Time
+	SettingKey   string    `json:"settingKey"`
+	SettingValue string    `json:"settingValue"`
+	Currency     string    `json:"currency"`
+	Status       string    `json:"status"`
+	CreatedAt    time.Time `json:"createdAt"`
+	UpdatedAt    time.Time `json:"updatedAt"`
 }
 
 func (r *UpdatePaymentSettingRequest) ToPaymentSetting(id string) paymentsettings.PaymentSetting {
 	return paymentsettings.PaymentSetting{
-		ID:        id,
-		Amount:    r.Amount,
-		Currency:  r.Currency,
-		Status:    r.Status,
-		CreatedAt: r.CreatedAt,
-		UpdatedAt: r.UpdatedAt,
+		ID:           id,
+		SettingKey:   r.SettingKey,
+		SettingValue: r.SettingValue,
+		Currency:     r.Currency,
+		Status:       r.Status,
+		CreatedAt:    r.CreatedAt,
+		UpdatedAt:    r.UpdatedAt,
 	}
 }

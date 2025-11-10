@@ -23,8 +23,8 @@ COPY --from=builder /app/migrations ./migrations
 RUN adduser -D -g '' appuser && chown -R appuser:appuser /app
 USER appuser
 
-EXPOSE 8080
+EXPOSE 9090
 
 ENTRYPOINT ["/app/engine"]
-CMD ["rest", "--port", "8080"]
+CMD ["rest", "--port", "9090"]
 

@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"os/signal"
 	"syscall"
@@ -75,11 +76,11 @@ func runREST(cmd *cobra.Command, args []string) (err error) {
 	go func() {
 		log.Info().
 			Str("port", cfg.Server.Port).
-			Str("health_check", "http://localhost:"+cfg.Server.Port+"/health").
-			Str("api_base", "http://localhost:"+cfg.Server.Port+"/api/v1").
+			Str("health_check", fmt.Sprintf("http://localhost:%s/health", cfg.Server.Port)).
+			Str("api_base", fmt.Sprintf("http://localhost:%s/api/v1", cfg.Server.Port)).
 			Msg("REST API server started")
 
-		if err := e.Start(":" + cfg.Server.Port); err != nil {
+		if err := e.Start(fmt.Sprintf(":%s", cfg.Server.Port)); err != nil {
 			log.Error().Err(err).Msg("Server stopped")
 		}
 	}()

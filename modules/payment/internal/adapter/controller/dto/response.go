@@ -7,12 +7,12 @@ import (
 )
 
 type PaymentResponse struct {
-	ID        string
-	Amount    float64
-	Currency  string
-	Status    string
-	CreatedAt time.Time
-	UpdatedAt time.Time
+	ID        string    `json:"id"`
+	Amount    float64   `json:"amount"`
+	Currency  string    `json:"currency"`
+	Status    string    `json:"status"`
+	CreatedAt time.Time `json:"createdAt"`
+	UpdatedAt time.Time `json:"updatedAt"`
 }
 
 func FromPaymentToResponse(p payment.Payment) PaymentResponse {

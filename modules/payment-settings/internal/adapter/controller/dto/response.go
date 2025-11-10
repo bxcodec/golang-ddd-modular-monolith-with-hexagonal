@@ -7,22 +7,24 @@ import (
 )
 
 type PaymentSettingResponse struct {
-	ID        string
-	Amount    float64
-	Currency  string
-	Status    string
-	CreatedAt time.Time
-	UpdatedAt time.Time
+	ID           string    `json:"id"`
+	SettingKey   string    `json:"settingKey"`
+	SettingValue string    `json:"settingValue"`
+	Currency     string    `json:"currency"`
+	Status       string    `json:"status"`
+	CreatedAt    time.Time `json:"createdAt"`
+	UpdatedAt    time.Time `json:"updatedAt"`
 }
 
 func FromPaymentSettingToResponse(setting paymentsettings.PaymentSetting) PaymentSettingResponse {
 	return PaymentSettingResponse{
-		ID:        setting.ID,
-		Amount:    setting.Amount,
-		Currency:  setting.Currency,
-		Status:    setting.Status,
-		CreatedAt: setting.CreatedAt,
-		UpdatedAt: setting.UpdatedAt,
+		ID:           setting.ID,
+		SettingKey:   setting.SettingKey,
+		SettingValue: setting.SettingValue,
+		Currency:     setting.Currency,
+		Status:       setting.Status,
+		CreatedAt:    setting.CreatedAt,
+		UpdatedAt:    setting.UpdatedAt,
 	}
 }
 

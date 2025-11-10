@@ -2,9 +2,7 @@ package repository
 
 import (
 	"database/sql"
-	"encoding/base64"
 	"fmt"
-	"strconv"
 	"time"
 
 	sq "github.com/Masterminds/squirrel"
@@ -28,22 +26,27 @@ func (r *PaymentSettingsRepository) qb() sq.StatementBuilderType {
 }
 
 func (r *PaymentSettingsRepository) FetchPaymentSettings(params paymentsettings.PaymentSettingFetchParams) (res []paymentsettings.PaymentSetting, nextCursor string, err error) {
-	query := r.qb().Select("id", "amount", "currency", "status", "created_at", "updated_at").
+	query := r.qb().Select("id", "setting_key", "setting_value", "currency", "status", "created_at", "updated_at").
 		From("payment_settings").
-		OrderBy("created_at DESC")
+		OrderBy("id DESC")
 
 	// Apply currency filter if provided
 	if params.Currency != "" {
 		query = query.Where(sq.Eq{"currency": params.Currency})
 	}
 
-	// Apply cursor-based pagination
+	// Apply setting key filter if provided
+	if params.SettingKey != "" {
+		query = query.Where(sq.Eq{"setting_key": params.SettingKey})
+	}
+
+	// Apply cursor-based pagination using ULID
 	if params.Cursor != "" {
-		cursorTime, decodeErr := decodeCursor(params.Cursor)
+		cursorID, decodeErr := dbutils.DecodeCursor(params.Cursor)
 		if decodeErr != nil {
 			return nil, "", fmt.Errorf("invalid cursor: %w", decodeErr)
 		}
-		query = query.Where(sq.Lt{"created_at": cursorTime})
+		query = query.Where(sq.Lt{"id": cursorID})
 	}
 
 	// Apply limit
@@ -63,7 +66,7 @@ func (r *PaymentSettingsRepository) FetchPaymentSettings(params paymentsettings.
 	res = make([]paymentsettings.PaymentSetting, 0)
 	for rows.Next() {
 		var setting paymentsettings.PaymentSetting
-		if err := rows.Scan(&setting.ID, &setting.Amount, &setting.Currency, &setting.Status, &setting.CreatedAt, &setting.UpdatedAt); err != nil {
+		if err := rows.Scan(&setting.ID, &setting.SettingKey, &setting.SettingValue, &setting.Currency, &setting.Status, &setting.CreatedAt, &setting.UpdatedAt); err != nil {
 			return nil, "", err
 		}
 		res = append(res, setting)
@@ -77,20 +80,20 @@ func (r *PaymentSettingsRepository) FetchPaymentSettings(params paymentsettings.
 	if len(res) > limit {
 		// Remove the extra item
 		res = res[:limit]
-		// Set next cursor to the last item's created_at
-		nextCursor = encodeCursor(res[len(res)-1].CreatedAt)
+		// Set next cursor to the last item's ID
+		nextCursor = dbutils.EncodeCursor(res[len(res)-1].ID)
 	}
 
 	return res, nextCursor, nil
 }
 
 func (r *PaymentSettingsRepository) GetPaymentSettingByCurrency(currency string) (setting paymentsettings.PaymentSetting, err error) {
-	err = r.qb().Select("id", "amount", "currency", "status", "created_at", "updated_at").
+	err = r.qb().Select("id", "setting_key", "setting_value", "currency", "status", "created_at", "updated_at").
 		From("payment_settings").
 		Where(sq.Eq{"currency": currency}).
 		RunWith(r.db).
 		QueryRow().
-		Scan(&setting.ID, &setting.Amount, &setting.Currency, &setting.Status, &setting.CreatedAt, &setting.UpdatedAt)
+		Scan(&setting.ID, &setting.SettingKey, &setting.SettingValue, &setting.Currency, &setting.Status, &setting.CreatedAt, &setting.UpdatedAt)
 
 	if err != nil {
 		return paymentsettings.PaymentSetting{}, dbutils.HandlePostgresError(err)
@@ -110,8 +113,8 @@ func (r *PaymentSettingsRepository) CreatePaymentSetting(settings *paymentsettin
 	settings.UpdatedAt = now
 
 	_, err = r.qb().Insert("payment_settings").
-		Columns("id", "amount", "currency", "status", "created_at", "updated_at").
-		Values(settings.ID, settings.Amount, settings.Currency, settings.Status, settings.CreatedAt, settings.UpdatedAt).
+		Columns("id", "setting_key", "setting_value", "currency", "status", "created_at", "updated_at").
+		Values(settings.ID, settings.SettingKey, settings.SettingValue, settings.Currency, settings.Status, settings.CreatedAt, settings.UpdatedAt).
 		RunWith(r.db).
 		Exec()
 
@@ -126,7 +129,8 @@ func (r *PaymentSettingsRepository) UpdatePaymentSetting(settings *paymentsettin
 	settings.UpdatedAt = time.Now()
 
 	result, err := r.qb().Update("payment_settings").
-		Set("amount", settings.Amount).
+		Set("setting_key", settings.SettingKey).
+		Set("setting_value", settings.SettingValue).
 		Set("currency", settings.Currency).
 		Set("status", settings.Status).
 		Set("updated_at", settings.UpdatedAt).
@@ -170,23 +174,4 @@ func (r *PaymentSettingsRepository) DeletePaymentSetting(id string) (err error) 
 	}
 
 	return nil
-}
-
-// Helper functions for cursor encoding/decoding
-func encodeCursor(t time.Time) (cursor string) {
-	return base64.StdEncoding.EncodeToString([]byte(strconv.FormatInt(t.UnixNano(), 10)))
-}
-
-func decodeCursor(cursor string) (t time.Time, err error) {
-	decoded, err := base64.StdEncoding.DecodeString(cursor)
-	if err != nil {
-		return time.Time{}, err
-	}
-
-	nano, err := strconv.ParseInt(string(decoded), 10, 64)
-	if err != nil {
-		return time.Time{}, err
-	}
-
-	return time.Unix(0, nano), nil
 }
