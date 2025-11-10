@@ -25,6 +25,10 @@ func (s *PaymentSettingsService) DeletePaymentSetting(id string) (err error) {
 	return s.repo.DeletePaymentSetting(id)
 }
 
-func (s *PaymentSettingsService) FetchPaymentSettings(params paymentsettings.PaymentSettingFetchParams) (res []paymentsettings.PaymentSetting, nextCursor string, err error) {
+func (s *PaymentSettingsService) FetchPaymentSettings(params paymentsettings.PaymentSettingFetchParams) (result []paymentsettings.PaymentSetting, nextCursor string, err error) {
 	return s.repo.FetchPaymentSettings(params)
+}
+
+func (s *PaymentSettingsService) GetPaymentSetting(id string) (result paymentsettings.PaymentSetting, err error) {
+	return s.repo.GetPaymentSetting(id)
 }

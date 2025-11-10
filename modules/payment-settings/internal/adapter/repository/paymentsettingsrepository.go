@@ -2,12 +2,12 @@ package repository
 
 import (
 	"database/sql"
-	"fmt"
 	"time"
 
 	sq "github.com/Masterminds/squirrel"
 	paymentsettings "github.com/bxcodec/golang-ddd-modular-monolith-with-hexagonal/modules/payment-settings"
 	"github.com/bxcodec/golang-ddd-modular-monolith-with-hexagonal/pkg/dbutils"
+	"github.com/bxcodec/golang-ddd-modular-monolith-with-hexagonal/pkg/errors"
 	"github.com/bxcodec/golang-ddd-modular-monolith-with-hexagonal/pkg/uniqueid"
 )
 
@@ -25,37 +25,34 @@ func (r *PaymentSettingsRepository) qb() sq.StatementBuilderType {
 	return sq.StatementBuilder.PlaceholderFormat(sq.Dollar)
 }
 
-func (r *PaymentSettingsRepository) FetchPaymentSettings(params paymentsettings.PaymentSettingFetchParams) (res []paymentsettings.PaymentSetting, nextCursor string, err error) {
+func (r *PaymentSettingsRepository) FetchPaymentSettings(params paymentsettings.PaymentSettingFetchParams) (result []paymentsettings.PaymentSetting, nextCursor string, err error) {
 	query := r.qb().Select("id", "setting_key", "setting_value", "currency", "status", "created_at", "updated_at").
 		From("payment_settings").
 		OrderBy("id DESC")
-
-	// Apply currency filter if provided
-	if params.Currency != "" {
-		query = query.Where(sq.Eq{"currency": params.Currency})
-	}
-
-	// Apply setting key filter if provided
-	if params.SettingKey != "" {
-		query = query.Where(sq.Eq{"setting_key": params.SettingKey})
-	}
 
 	// Apply cursor-based pagination using ULID
 	if params.Cursor != "" {
 		cursorID, decodeErr := dbutils.DecodeCursor(params.Cursor)
 		if decodeErr != nil {
-			return nil, "", fmt.Errorf("invalid cursor: %w", decodeErr)
+			return nil, "", decodeErr
 		}
 		query = query.Where(sq.Lt{"id": cursorID})
 	}
 
-	// Apply limit
-	limit := params.Limit
-	if limit <= 0 {
-		limit = 10 // default limit
+	if params.Currency != "" {
+		query = query.Where(sq.Eq{"currency": params.Currency})
 	}
+
+	if params.SettingKey != "" {
+		query = query.Where(sq.Eq{"setting_key": params.SettingKey})
+	}
+
+	if params.Status != "" {
+		query = query.Where(sq.Eq{"status": params.Status})
+	}
+
 	// Fetch one extra to determine if there's a next page
-	query = query.Limit(uint64(limit + 1))
+	query = query.Limit(uint64(params.Limit + 1))
 
 	rows, err := query.RunWith(r.db).Query()
 	if err != nil {
@@ -63,13 +60,13 @@ func (r *PaymentSettingsRepository) FetchPaymentSettings(params paymentsettings.
 	}
 	defer rows.Close()
 
-	res = make([]paymentsettings.PaymentSetting, 0)
+	result = make([]paymentsettings.PaymentSetting, 0)
 	for rows.Next() {
 		var setting paymentsettings.PaymentSetting
 		if err := rows.Scan(&setting.ID, &setting.SettingKey, &setting.SettingValue, &setting.Currency, &setting.Status, &setting.CreatedAt, &setting.UpdatedAt); err != nil {
 			return nil, "", err
 		}
-		res = append(res, setting)
+		result = append(result, setting)
 	}
 
 	if err := rows.Err(); err != nil {
@@ -77,29 +74,29 @@ func (r *PaymentSettingsRepository) FetchPaymentSettings(params paymentsettings.
 	}
 
 	// Check if there are more results
-	if len(res) > limit {
+	if len(result) > params.Limit {
 		// Remove the extra item
-		res = res[:limit]
+		result = result[:params.Limit]
 		// Set next cursor to the last item's ID
-		nextCursor = dbutils.EncodeCursor(res[len(res)-1].ID)
+		nextCursor = dbutils.EncodeCursor(result[len(result)-1].ID)
 	}
 
-	return res, nextCursor, nil
+	return result, nextCursor, nil
 }
 
-func (r *PaymentSettingsRepository) GetPaymentSettingByCurrency(currency string) (setting paymentsettings.PaymentSetting, err error) {
+func (r *PaymentSettingsRepository) GetPaymentSetting(id string) (result paymentsettings.PaymentSetting, err error) {
 	err = r.qb().Select("id", "setting_key", "setting_value", "currency", "status", "created_at", "updated_at").
 		From("payment_settings").
-		Where(sq.Eq{"currency": currency}).
+		Where(sq.Eq{"id": id}).
 		RunWith(r.db).
 		QueryRow().
-		Scan(&setting.ID, &setting.SettingKey, &setting.SettingValue, &setting.Currency, &setting.Status, &setting.CreatedAt, &setting.UpdatedAt)
+		Scan(&result.ID, &result.SettingKey, &result.SettingValue, &result.Currency, &result.Status, &result.CreatedAt, &result.UpdatedAt)
 
 	if err != nil {
-		return paymentsettings.PaymentSetting{}, dbutils.HandlePostgresError(err)
+		return result, dbutils.HandlePostgresError(err)
 	}
 
-	return setting, nil
+	return result, nil
 }
 
 func (r *PaymentSettingsRepository) CreatePaymentSetting(settings *paymentsettings.PaymentSetting) (err error) {
@@ -148,7 +145,7 @@ func (r *PaymentSettingsRepository) UpdatePaymentSetting(settings *paymentsettin
 	}
 
 	if rowsAffected == 0 {
-		return dbutils.HandlePostgresError(err)
+		return errors.ErrDataNotFound
 	}
 
 	return nil
@@ -170,7 +167,7 @@ func (r *PaymentSettingsRepository) DeletePaymentSetting(id string) (err error) 
 	}
 
 	if rowsAffected == 0 {
-		return dbutils.HandlePostgresError(err)
+		return errors.ErrDataNotFound
 	}
 
 	return nil

@@ -18,12 +18,14 @@ type PaymentSettingFetchParams struct {
 	SettingKey string `json:"settingKey"`
 	Limit      int    `json:"limit"`
 	Cursor     string `json:"cursor"`
+	Status     string `json:"status"`
 }
 
 // IPaymentSettingsService defines the public API for payment settings operations
 type IPaymentSettingsService interface {
-	FetchPaymentSettings(params PaymentSettingFetchParams) (res []PaymentSetting, nextCursor string, err error)
+	FetchPaymentSettings(params PaymentSettingFetchParams) (result []PaymentSetting, nextCursor string, err error)
 	CreatePaymentSetting(settings *PaymentSetting) error
+	GetPaymentSetting(id string) (PaymentSetting, error)
 	UpdatePaymentSetting(settings *PaymentSetting) error
 	DeletePaymentSetting(id string) error
 }

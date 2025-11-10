@@ -8,6 +8,7 @@ import (
 	"github.com/bxcodec/golang-ddd-modular-monolith-with-hexagonal/modules/payment"
 	"github.com/bxcodec/golang-ddd-modular-monolith-with-hexagonal/modules/payment/internal/ports"
 	"github.com/bxcodec/golang-ddd-modular-monolith-with-hexagonal/pkg/dbutils"
+	"github.com/bxcodec/golang-ddd-modular-monolith-with-hexagonal/pkg/errors"
 	"github.com/bxcodec/golang-ddd-modular-monolith-with-hexagonal/pkg/uniqueid"
 )
 
@@ -140,7 +141,7 @@ func (r *paymentRepository) UpdatePayment(p *payment.Payment) (err error) {
 	}
 
 	if rowsAffected == 0 {
-		return dbutils.HandlePostgresError(err)
+		return errors.ErrDataNotFound
 	}
 
 	return nil
@@ -162,7 +163,7 @@ func (r *paymentRepository) DeletePayment(id string) (err error) {
 	}
 
 	if rowsAffected == 0 {
-		return dbutils.HandlePostgresError(err)
+		return errors.ErrDataNotFound
 	}
 
 	return nil

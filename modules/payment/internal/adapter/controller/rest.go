@@ -31,16 +31,16 @@ func (c *paymentController) CreatePayment(ctx echo.Context) (err error) {
 	paymentData := paymentRequest.ToPayment()
 	err = c.paymentService.CreatePayment(&paymentData)
 	if err != nil {
-		return ctx.JSON(http.StatusInternalServerError, err)
+		return err
 	}
-	return ctx.JSON(http.StatusOK, dto.FromPaymentToResponse(paymentData))
+	return ctx.JSON(http.StatusCreated, dto.FromPaymentToResponse(paymentData))
 }
 
 func (c *paymentController) GetPayment(ctx echo.Context) (err error) {
 	id := ctx.Param("id")
 	payment, err := c.paymentService.GetPayment(id)
 	if err != nil {
-		return ctx.JSON(http.StatusInternalServerError, err)
+		return err
 	}
 	return ctx.JSON(http.StatusOK, dto.FromPaymentToResponse(payment))
 }
@@ -61,7 +61,7 @@ func (c *paymentController) FetchPayments(ctx echo.Context) (err error) {
 		Status:   ctx.QueryParam("status"),
 	})
 	if err != nil {
-		return ctx.JSON(http.StatusInternalServerError, err)
+		return err
 	}
 	ctx.Response().Header().Set("X-Next-Cursor", nextCursor)
 	return ctx.JSON(http.StatusOK, dto.FromPaymentListToResponse(result))
@@ -76,7 +76,7 @@ func (c *paymentController) UpdatePayment(ctx echo.Context) (err error) {
 	paymentData := paymentRequest.ToPayment(id)
 	err = c.paymentService.UpdatePayment(&paymentData)
 	if err != nil {
-		return ctx.JSON(http.StatusInternalServerError, err)
+		return err
 	}
 	return ctx.JSON(http.StatusOK, dto.FromPaymentToResponse(paymentData))
 }
@@ -85,7 +85,7 @@ func (c *paymentController) DeletePayment(ctx echo.Context) (err error) {
 	id := ctx.Param("id")
 	err = c.paymentService.DeletePayment(id)
 	if err != nil {
-		return ctx.JSON(http.StatusInternalServerError, err)
+		return err
 	}
 	return ctx.NoContent(http.StatusNoContent)
 }
