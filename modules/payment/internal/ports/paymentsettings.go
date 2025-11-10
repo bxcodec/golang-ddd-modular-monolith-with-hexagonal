@@ -4,8 +4,6 @@ import (
 	paymentsettings "github.com/bxcodec/golang-ddd-modular-monolith-with-hexagonal/modules/payment-settings"
 )
 
-//go:generate mockery --name IPaymentSettingsPort
-
 // IPaymentSettingsPort defines the contract for payment settings that the payment module needs.
 // If you see theres a less method here compared to paymentsettings.IPaymentSettingsService, it's because we don't need all the methods.
 // We only need the ones that the payment module needs.

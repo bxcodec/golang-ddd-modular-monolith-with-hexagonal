@@ -4,8 +4,6 @@ import (
 	paymentsettings "github.com/bxcodec/golang-ddd-modular-monolith-with-hexagonal/modules/payment-settings"
 )
 
-//go:generate mockery --name IPaymentSettingsRepository
-
 type IPaymentSettingsRepository interface {
 	FetchPaymentSettings(params paymentsettings.PaymentSettingFetchParams) (res []paymentsettings.PaymentSetting, nextCursor string, err error)
 	CreatePaymentSetting(settings *paymentsettings.PaymentSetting) error

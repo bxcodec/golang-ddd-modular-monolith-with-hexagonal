@@ -18,8 +18,6 @@ type PaymentSettingFetchParams struct {
 	Cursor   string
 }
 
-//go:generate mockery --name IPaymentSettingsService
-
 // IPaymentSettingsService defines the public API for payment settings operations
 type IPaymentSettingsService interface {
 	FetchPaymentSettings(params PaymentSettingFetchParams) (res []PaymentSetting, nextCursor string, err error)

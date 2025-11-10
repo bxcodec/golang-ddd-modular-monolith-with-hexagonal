@@ -2,8 +2,6 @@ package payment
 
 import "github.com/labstack/echo/v4"
 
-//go:generate mockery --name CronAdapter
-
 // CronAdapter represents the interface for cron job operations
 type CronAdapter interface {
 	Execute() (interface{}, error)
