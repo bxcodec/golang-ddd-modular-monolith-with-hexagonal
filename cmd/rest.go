@@ -2,9 +2,11 @@ package cmd
 
 import (
 	"log"
+	"time"
 
 	settingsfactory "github.com/bxcodec/golang-ddd-modular-monolith-with-hexagonal/modules/payment-settings/factory"
 	paymentfactory "github.com/bxcodec/golang-ddd-modular-monolith-with-hexagonal/modules/payment/factory"
+	"github.com/bxcodec/golang-ddd-modular-monolith-with-hexagonal/pkg/middlewares"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/spf13/cobra"
@@ -61,7 +63,8 @@ func runREST(cmd *cobra.Command, args []string) (err error) {
 	e := echo.New()
 	e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
-	e.Use(middleware.CORS())
+	e.Use(middlewares.CORS())
+	e.Use(middlewares.SetRequestContextWithTimeout(10 * time.Second))
 
 	// Health check endpoint
 	e.GET("/health", func(c echo.Context) error {

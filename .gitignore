@@ -40,3 +40,6 @@ tmp_app/
 # Build artifacts
 engine
 air_errors.log
+
+# Generated mocks
+**/mocks/

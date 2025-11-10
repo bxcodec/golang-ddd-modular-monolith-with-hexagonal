@@ -77,7 +77,7 @@ bin/tparse: bin
 MOCKERY := $(shell command -v mockery || echo "bin/mockery")
 mockery: bin/mockery ## Installs mockery (mocks generation)
 
-bin/mockery: VERSION := 2.42.0
+bin/mockery: VERSION := 3.5.5
 bin/mockery: GITHUB  := vektra/mockery
 bin/mockery: ARCHIVE := mockery_$(VERSION)_$(OSTYPE)_$(ARCH).tar.gz
 bin/mockery: bin

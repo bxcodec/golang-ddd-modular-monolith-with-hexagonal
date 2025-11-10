@@ -21,6 +21,7 @@ include ./.misc/make/help.Makefile
 
 # ~~~ Development Environment ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+init: install-deps go-generate ## Initialize the project
 up: dev-env dev-air             ## Startup / Spinup Docker Compose and air
 down: docker-stop               ## Stop Docker
 destroy: docker-teardown clean  ## Teardown (removes volumes, tmp files, etc...)
@@ -83,8 +84,8 @@ build-race: ## Builds binary (with -race flag)
 	@ echo "done"
 
 
-go-generate: $(MOCKERY) ## Runs go generte ./...
-	go generate ./...
+go-generate: $(MOCKERY) ## Runs mockery to generate mocks
+	mockery
 
 
 TESTS_ARGS := --format testname --jsonfile gotestsum.json.out

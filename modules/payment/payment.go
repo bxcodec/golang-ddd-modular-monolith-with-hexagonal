@@ -12,6 +12,8 @@ type Payment struct {
 	UpdatedAt time.Time
 }
 
+//go:generate mockery --name IPaymentService
+
 // IPaymentService defines the public API for payment operations
 type IPaymentService interface {
 	CreatePayment(payment *Payment) (err error)
