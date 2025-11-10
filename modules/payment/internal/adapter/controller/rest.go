@@ -12,8 +12,8 @@ type paymentController struct {
 	paymentService payment.IPaymentService
 }
 
-func NewPaymentController(e *echo.Group, paymentService payment.IPaymentService) *paymentController {
-	controller := &paymentController{paymentService: paymentService}
+func NewPaymentController(e *echo.Group, paymentService payment.IPaymentService) (controller *paymentController) {
+	controller = &paymentController{paymentService: paymentService}
 	e.POST("/payments", controller.CreatePayment)
 	e.GET("/payments/:id", controller.GetPayment)
 	e.GET("/payments", controller.GetPayments)
@@ -22,20 +22,20 @@ func NewPaymentController(e *echo.Group, paymentService payment.IPaymentService)
 	return controller
 }
 
-func (c *paymentController) CreatePayment(ctx echo.Context) error {
+func (c *paymentController) CreatePayment(ctx echo.Context) (err error) {
 	var paymentRequest *dto.CreatePaymentRequest
-	if err := ctx.Bind(&paymentRequest); err != nil {
+	if err = ctx.Bind(&paymentRequest); err != nil {
 		return err
 	}
 	paymentData := paymentRequest.ToPayment()
-	err := c.paymentService.CreatePayment(&paymentData)
+	err = c.paymentService.CreatePayment(&paymentData)
 	if err != nil {
 		return ctx.JSON(http.StatusInternalServerError, err)
 	}
 	return ctx.JSON(http.StatusOK, dto.FromPaymentToResponse(paymentData))
 }
 
-func (c *paymentController) GetPayment(ctx echo.Context) error {
+func (c *paymentController) GetPayment(ctx echo.Context) (err error) {
 	id := ctx.Param("id")
 	payment, err := c.paymentService.GetPayment(id)
 	if err != nil {
@@ -44,7 +44,7 @@ func (c *paymentController) GetPayment(ctx echo.Context) error {
 	return ctx.JSON(http.StatusOK, dto.FromPaymentToResponse(payment))
 }
 
-func (c *paymentController) GetPayments(ctx echo.Context) error {
+func (c *paymentController) GetPayments(ctx echo.Context) (err error) {
 	payments, nextCursor, err := c.paymentService.GetPayments()
 	if err != nil {
 		return ctx.JSON(http.StatusInternalServerError, err)
@@ -53,23 +53,23 @@ func (c *paymentController) GetPayments(ctx echo.Context) error {
 	return ctx.JSON(http.StatusOK, dto.FromPaymentListToResponse(payments))
 }
 
-func (c *paymentController) UpdatePayment(ctx echo.Context) error {
+func (c *paymentController) UpdatePayment(ctx echo.Context) (err error) {
 	id := ctx.Param("id")
 	var paymentRequest *dto.UpdatePaymentRequest
-	if err := ctx.Bind(&paymentRequest); err != nil {
+	if err = ctx.Bind(&paymentRequest); err != nil {
 		return err
 	}
 	paymentData := paymentRequest.ToPayment(id)
-	err := c.paymentService.UpdatePayment(&paymentData)
+	err = c.paymentService.UpdatePayment(&paymentData)
 	if err != nil {
 		return ctx.JSON(http.StatusInternalServerError, err)
 	}
 	return ctx.JSON(http.StatusOK, dto.FromPaymentToResponse(paymentData))
 }
 
-func (c *paymentController) DeletePayment(ctx echo.Context) error {
+func (c *paymentController) DeletePayment(ctx echo.Context) (err error) {
 	id := ctx.Param("id")
-	err := c.paymentService.DeletePayment(id)
+	err = c.paymentService.DeletePayment(id)
 	if err != nil {
 		return ctx.JSON(http.StatusInternalServerError, err)
 	}

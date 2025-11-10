@@ -9,19 +9,19 @@ type PaymentSettingsService struct {
 	repo ports.IPaymentSettingsRepository
 }
 
-func NewPaymentSettingsService(repo ports.IPaymentSettingsRepository) *PaymentSettingsService {
+func NewPaymentSettingsService(repo ports.IPaymentSettingsRepository) (service *PaymentSettingsService) {
 	return &PaymentSettingsService{repo: repo}
 }
 
-func (s *PaymentSettingsService) CreatePaymentSetting(settings *paymentsettings.PaymentSetting) error {
+func (s *PaymentSettingsService) CreatePaymentSetting(settings *paymentsettings.PaymentSetting) (err error) {
 	return s.repo.CreatePaymentSetting(settings)
 }
 
-func (s *PaymentSettingsService) UpdatePaymentSetting(settings *paymentsettings.PaymentSetting) error {
+func (s *PaymentSettingsService) UpdatePaymentSetting(settings *paymentsettings.PaymentSetting) (err error) {
 	return s.repo.UpdatePaymentSetting(settings)
 }
 
-func (s *PaymentSettingsService) DeletePaymentSetting(id string) error {
+func (s *PaymentSettingsService) DeletePaymentSetting(id string) (err error) {
 	return s.repo.DeletePaymentSetting(id)
 }
 

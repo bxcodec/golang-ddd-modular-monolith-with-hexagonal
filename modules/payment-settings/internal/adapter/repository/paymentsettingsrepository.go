@@ -16,7 +16,7 @@ type PaymentSettingsRepository struct {
 	qb sq.StatementBuilderType
 }
 
-func NewPaymentSettingsRepository(db *sql.DB) *PaymentSettingsRepository {
+func NewPaymentSettingsRepository(db *sql.DB) (repo *PaymentSettingsRepository) {
 	return &PaymentSettingsRepository{
 		db: db,
 		qb: sq.StatementBuilder.PlaceholderFormat(sq.Dollar),
@@ -80,10 +80,8 @@ func (r *PaymentSettingsRepository) FetchPaymentSettings(params paymentsettings.
 	return res, nextCursor, nil
 }
 
-func (r *PaymentSettingsRepository) GetPaymentSettingByCurrency(currency string) (paymentsettings.PaymentSetting, error) {
-	var setting paymentsettings.PaymentSetting
-
-	err := r.qb.Select("id", "amount", "currency", "status", "created_at", "updated_at").
+func (r *PaymentSettingsRepository) GetPaymentSettingByCurrency(currency string) (setting paymentsettings.PaymentSetting, err error) {
+	err = r.qb.Select("id", "amount", "currency", "status", "created_at", "updated_at").
 		From("payment_settings").
 		Where(sq.Eq{"currency": currency}).
 		RunWith(r.db).
@@ -97,12 +95,12 @@ func (r *PaymentSettingsRepository) GetPaymentSettingByCurrency(currency string)
 	return setting, nil
 }
 
-func (r *PaymentSettingsRepository) CreatePaymentSetting(settings *paymentsettings.PaymentSetting) error {
+func (r *PaymentSettingsRepository) CreatePaymentSetting(settings *paymentsettings.PaymentSetting) (err error) {
 	now := time.Now()
 	settings.CreatedAt = now
 	settings.UpdatedAt = now
 
-	err := r.qb.Insert("payment_settings").
+	err = r.qb.Insert("payment_settings").
 		Columns("id", "amount", "currency", "status", "created_at", "updated_at").
 		Values(settings.ID, settings.Amount, settings.Currency, settings.Status, settings.CreatedAt, settings.UpdatedAt).
 		Suffix("RETURNING id").
@@ -113,7 +111,7 @@ func (r *PaymentSettingsRepository) CreatePaymentSetting(settings *paymentsettin
 	return err
 }
 
-func (r *PaymentSettingsRepository) UpdatePaymentSetting(settings *paymentsettings.PaymentSetting) error {
+func (r *PaymentSettingsRepository) UpdatePaymentSetting(settings *paymentsettings.PaymentSetting) (err error) {
 	settings.UpdatedAt = time.Now()
 
 	result, err := r.qb.Update("payment_settings").
@@ -141,7 +139,7 @@ func (r *PaymentSettingsRepository) UpdatePaymentSetting(settings *paymentsettin
 	return nil
 }
 
-func (r *PaymentSettingsRepository) DeletePaymentSetting(id string) error {
+func (r *PaymentSettingsRepository) DeletePaymentSetting(id string) (err error) {
 	result, err := r.qb.Delete("payment_settings").
 		Where(sq.Eq{"id": id}).
 		RunWith(r.db).
@@ -164,11 +162,11 @@ func (r *PaymentSettingsRepository) DeletePaymentSetting(id string) error {
 }
 
 // Helper functions for cursor encoding/decoding
-func encodeCursor(t time.Time) string {
+func encodeCursor(t time.Time) (cursor string) {
 	return base64.StdEncoding.EncodeToString([]byte(strconv.FormatInt(t.UnixNano(), 10)))
 }
 
-func decodeCursor(cursor string) (time.Time, error) {
+func decodeCursor(cursor string) (t time.Time, err error) {
 	decoded, err := base64.StdEncoding.DecodeString(cursor)
 	if err != nil {
 		return time.Time{}, err

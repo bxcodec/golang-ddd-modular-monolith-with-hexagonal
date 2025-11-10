@@ -32,3 +32,11 @@ go.work.sum
 # .vscode/
 app
 bin/*
+
+# Air tmp directory
+tmp/
+tmp_app/
+
+# Build artifacts
+engine
+air_errors.log

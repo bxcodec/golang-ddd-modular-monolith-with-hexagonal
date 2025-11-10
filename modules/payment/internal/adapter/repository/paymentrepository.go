@@ -21,12 +21,12 @@ func NewPaymentRepository(db *sql.DB) ports.IPaymentRepository {
 	}
 }
 
-func (r *paymentRepository) CreatePayment(p *payment.Payment) error {
+func (r *paymentRepository) CreatePayment(p *payment.Payment) (err error) {
 	now := time.Now()
 	p.CreatedAt = now
 	p.UpdatedAt = now
 
-	err := r.qb.Insert("payments").
+	err = r.qb.Insert("payments").
 		Columns("id", "amount", "currency", "status", "created_at", "updated_at").
 		Values(p.ID, p.Amount, p.Currency, p.Status, p.CreatedAt, p.UpdatedAt).
 		Suffix("RETURNING id").
@@ -37,27 +37,24 @@ func (r *paymentRepository) CreatePayment(p *payment.Payment) error {
 	return err
 }
 
-func (r *paymentRepository) GetPayment(id string) (*payment.Payment, error) {
-	var p payment.Payment
+func (r *paymentRepository) GetPayment(id string) (p *payment.Payment, err error) {
+	var paymentData payment.Payment
 
-	err := r.qb.Select("id", "amount", "currency", "status", "created_at", "updated_at").
+	err = r.qb.Select("id", "amount", "currency", "status", "created_at", "updated_at").
 		From("payments").
 		Where(sq.Eq{"id": id}).
 		RunWith(r.db).
 		QueryRow().
-		Scan(&p.ID, &p.Amount, &p.Currency, &p.Status, &p.CreatedAt, &p.UpdatedAt)
+		Scan(&paymentData.ID, &paymentData.Amount, &paymentData.Currency, &paymentData.Status, &paymentData.CreatedAt, &paymentData.UpdatedAt)
 
 	if err != nil {
-		if err == sql.ErrNoRows {
-			return nil, err
-		}
 		return nil, err
 	}
 
-	return &p, nil
+	return &paymentData, nil
 }
 
-func (r *paymentRepository) GetPayments() ([]*payment.Payment, error) {
+func (r *paymentRepository) GetPayments() (payments []*payment.Payment, err error) {
 	rows, err := r.qb.Select("id", "amount", "currency", "status", "created_at", "updated_at").
 		From("payments").
 		OrderBy("created_at DESC").
@@ -69,7 +66,7 @@ func (r *paymentRepository) GetPayments() ([]*payment.Payment, error) {
 	}
 	defer rows.Close()
 
-	payments := make([]*payment.Payment, 0)
+	payments = make([]*payment.Payment, 0)
 	for rows.Next() {
 		var p payment.Payment
 		if err := rows.Scan(&p.ID, &p.Amount, &p.Currency, &p.Status, &p.CreatedAt, &p.UpdatedAt); err != nil {
@@ -85,7 +82,7 @@ func (r *paymentRepository) GetPayments() ([]*payment.Payment, error) {
 	return payments, nil
 }
 
-func (r *paymentRepository) UpdatePayment(p *payment.Payment) error {
+func (r *paymentRepository) UpdatePayment(p *payment.Payment) (err error) {
 	p.UpdatedAt = time.Now()
 
 	result, err := r.qb.Update("payments").
@@ -113,7 +110,7 @@ func (r *paymentRepository) UpdatePayment(p *payment.Payment) error {
 	return nil
 }
 
-func (r *paymentRepository) DeletePayment(id string) error {
+func (r *paymentRepository) DeletePayment(id string) (err error) {
 	result, err := r.qb.Delete("payments").
 		Where(sq.Eq{"id": id}).
 		RunWith(r.db).

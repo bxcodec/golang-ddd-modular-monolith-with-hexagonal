@@ -5,6 +5,7 @@ import (
 
 	"github.com/bxcodec/golang-ddd-modular-monolith-with-hexagonal/modules/payment"
 	"github.com/bxcodec/golang-ddd-modular-monolith-with-hexagonal/modules/payment/internal/adapter/controller"
+	"github.com/bxcodec/golang-ddd-modular-monolith-with-hexagonal/modules/payment/internal/adapter/cron"
 	"github.com/bxcodec/golang-ddd-modular-monolith-with-hexagonal/modules/payment/internal/adapter/repository"
 	"github.com/bxcodec/golang-ddd-modular-monolith-with-hexagonal/modules/payment/internal/ports"
 	"github.com/bxcodec/golang-ddd-modular-monolith-with-hexagonal/modules/payment/internal/service"
@@ -20,11 +21,14 @@ type ModuleConfig struct {
 	// this is to follow Golang idiomatic way of doing things.
 	// also this is to avoid circular dependencies.
 	PaymentSettingsPort ports.IPaymentSettingsPort
+	// Cron configuration
+	CronBatchSize int
+	CronDryRun    bool
 	// In the future if we need more dependencies, we can add them here.
 }
 
 // NewModule creates a fully wired payment module
-// This assembles ALL components: core (hexagon) + adapters (controllers, repositories)
+// This assembles ALL components: core (hexagon) + adapters (controllers, repositories, cron)
 func NewModule(config ModuleConfig) *payment.Module {
 	// Wire up outbound adapters (repositories)
 	paymentRepo := repository.NewPaymentRepository(config.DB)
@@ -32,11 +36,23 @@ func NewModule(config ModuleConfig) *payment.Module {
 	// Wire up the hexagon core (service)
 	paymentService := service.NewPaymentService(paymentRepo, config.PaymentSettingsPort)
 
-	// Create the module with inbound adapter registration function
+	// Set default cron batch size if not provided
+	if config.CronBatchSize == 0 {
+		config.CronBatchSize = 50
+	}
+
+	// Wire up cron adapters
+	paymentUpdater := cron.NewPaymentUpdater(paymentService, cron.PaymentUpdaterConfig{
+		BatchSize: config.CronBatchSize,
+		DryRun:    config.CronDryRun,
+	})
+
+	// Create the module with all adapters
 	return &payment.Module{
 		Service: paymentService,
 		RegisterController: func(e *echo.Group) {
 			controller.NewPaymentController(e, paymentService)
 		},
+		PaymentUpdater: paymentUpdater,
 	}
 }

@@ -30,21 +30,26 @@ deps: $(MIGRATE) $(AIR) $(GOTESTSUM) $(TPARSE) $(MOCKERY) $(GOLANGCI) ## Checks 
 deps:
 	@echo "Required Tools Are Available"
 
-dev-env: ## Bootstrap Environment (with a Docker-Compose help).
-	@ docker-compose up -d --build postgres
+dev-env: ## Bootstrap Environment (with a Docker compose help).
+	@ docker compose up -d --build postgres
 
-dev-env-test: dev-env ## Run application (within a Docker-Compose help)
+dev-env-test: dev-env ## Run application (within a Docker compose help)
 	@ $(MAKE) image-build
-	docker-compose up web
+	docker compose up web
 
 dev-air: $(AIR) ## Starts AIR ( Continuous Development app).
+	POSTGRES_HOST=$(POSTGRES_HOST) \
+	POSTGRES_PORT=$(POSTGRES_PORT) \
+	POSTGRES_USER=$(POSTGRES_USER) \
+	POSTGRES_PASSWORD=$(POSTGRES_PASSWORD) \
+	POSTGRES_DB=$(POSTGRES_DB) \
 	air
-
+ 
 docker-stop:
-	@ docker-compose down
+	@ docker compose down
 
 docker-teardown:
-	@ docker-compose down --remove-orphans -v
+	@ docker compose down --remove-orphans -v
 
 # ~~~ Code Actions ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -64,7 +69,7 @@ build: ## Builds binary
 	@ go build \
 		-trimpath  \
 		-o engine \
-		./app/
+		./application/
 	@ echo "done"
 
 
@@ -74,7 +79,7 @@ build-race: ## Builds binary (with -race flag)
 		-trimpath  \
 		-race      \
 		-o engine \
-		./app/
+		./application/
 	@ echo "done"
 
 
@@ -100,13 +105,27 @@ tests-complete: tests $(TPARSE) ## Run Tests & parse details
 
 # ~~~ Docker Build ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+IMAGE_NAME ?= payment-app
+IMAGE_TAG ?= latest
+
 .ONESHELL:
-image-build:
-	@ echo "Docker Build"
-	@ DOCKER_BUILDKIT=0 docker build \
+image-build: ## Build Docker image
+	@ echo "Building Docker image: $(IMAGE_NAME):$(IMAGE_TAG)"
+	@ docker build \
 		--file Dockerfile \
-		--tag go-clean-arch \
+		--tag $(IMAGE_NAME):$(IMAGE_TAG) \
+		--build-arg BUILDKIT_INLINE_CACHE=1 \
 			.
+	@ echo "Image built successfully: $(IMAGE_NAME):$(IMAGE_TAG)"
+
+image-build-no-cache: ## Build Docker image without cache
+	@ echo "Building Docker image without cache: $(IMAGE_NAME):$(IMAGE_TAG)"
+	@ docker build \
+		--no-cache \
+		--file Dockerfile \
+		--tag $(IMAGE_NAME):$(IMAGE_TAG) \
+			.
+	@ echo "Image built successfully: $(IMAGE_NAME):$(IMAGE_TAG)"
 
 # ~~~ Database Migrations ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

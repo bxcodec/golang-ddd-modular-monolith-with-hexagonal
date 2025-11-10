@@ -13,8 +13,8 @@ type paymentSettingController struct {
 	paymentSettingsService paymentsettings.IPaymentSettingsService
 }
 
-func NewPaymentSettingController(e *echo.Group, paymentSettingsService paymentsettings.IPaymentSettingsService) *paymentSettingController {
-	controller := &paymentSettingController{paymentSettingsService: paymentSettingsService}
+func NewPaymentSettingController(e *echo.Group, paymentSettingsService paymentsettings.IPaymentSettingsService) (controller *paymentSettingController) {
+	controller = &paymentSettingController{paymentSettingsService: paymentSettingsService}
 	e.GET("/payment-settings", controller.FetchPaymentSettings)
 	e.POST("/payment-settings", controller.CreatePaymentSetting)
 	e.PUT("/payment-settings/:id", controller.UpdatePaymentSetting)
@@ -22,7 +22,7 @@ func NewPaymentSettingController(e *echo.Group, paymentSettingsService paymentse
 	return controller
 }
 
-func (c *paymentSettingController) FetchPaymentSettings(ctx echo.Context) error {
+func (c *paymentSettingController) FetchPaymentSettings(ctx echo.Context) (err error) {
 	limit, err := strconv.Atoi(ctx.QueryParam("limit"))
 	if err != nil {
 		return ctx.JSON(http.StatusBadRequest, err)
@@ -40,36 +40,36 @@ func (c *paymentSettingController) FetchPaymentSettings(ctx echo.Context) error 
 	return ctx.JSON(http.StatusOK, dto.FromPaymentSettingListToResponse(settings))
 }
 
-func (c *paymentSettingController) CreatePaymentSetting(ctx echo.Context) error {
+func (c *paymentSettingController) CreatePaymentSetting(ctx echo.Context) (err error) {
 	var paymentSettingRequest *dto.CreatePaymentSettingRequest
-	if err := ctx.Bind(&paymentSettingRequest); err != nil {
+	if err = ctx.Bind(&paymentSettingRequest); err != nil {
 		return err
 	}
 	paymentSetting := paymentSettingRequest.ToPaymentSetting()
-	err := c.paymentSettingsService.CreatePaymentSetting(&paymentSetting)
+	err = c.paymentSettingsService.CreatePaymentSetting(&paymentSetting)
 	if err != nil {
 		return ctx.JSON(http.StatusInternalServerError, err)
 	}
 	return ctx.JSON(http.StatusOK, dto.FromPaymentSettingToResponse(paymentSetting))
 }
 
-func (c *paymentSettingController) UpdatePaymentSetting(ctx echo.Context) error {
+func (c *paymentSettingController) UpdatePaymentSetting(ctx echo.Context) (err error) {
 	id := ctx.Param("id")
 	var paymentSettingRequest *dto.UpdatePaymentSettingRequest
-	if err := ctx.Bind(&paymentSettingRequest); err != nil {
+	if err = ctx.Bind(&paymentSettingRequest); err != nil {
 		return err
 	}
 	paymentSetting := paymentSettingRequest.ToPaymentSetting(id)
-	err := c.paymentSettingsService.UpdatePaymentSetting(&paymentSetting)
+	err = c.paymentSettingsService.UpdatePaymentSetting(&paymentSetting)
 	if err != nil {
 		return ctx.JSON(http.StatusInternalServerError, err)
 	}
 	return ctx.JSON(http.StatusOK, dto.FromPaymentSettingToResponse(paymentSetting))
 }
 
-func (c *paymentSettingController) DeletePaymentSetting(ctx echo.Context) error {
+func (c *paymentSettingController) DeletePaymentSetting(ctx echo.Context) (err error) {
 	id := ctx.Param("id")
-	err := c.paymentSettingsService.DeletePaymentSetting(id)
+	err = c.paymentSettingsService.DeletePaymentSetting(id)
 	if err != nil {
 		return ctx.JSON(http.StatusInternalServerError, err)
 	}

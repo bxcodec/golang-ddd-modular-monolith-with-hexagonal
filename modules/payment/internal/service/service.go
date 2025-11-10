@@ -11,15 +11,14 @@ type PaymentService struct {
 	paymentSettingsRepo ports.IPaymentSettingsPort
 }
 
-func NewPaymentService(paymentRepo ports.IPaymentRepository,
-	paymentSettingsRepo ports.IPaymentSettingsPort) *PaymentService {
+func NewPaymentService(paymentRepo ports.IPaymentRepository, paymentSettingsRepo ports.IPaymentSettingsPort) (service *PaymentService) {
 	return &PaymentService{
 		paymentRepo:         paymentRepo,
 		paymentSettingsRepo: paymentSettingsRepo,
 	}
 }
 
-func (s *PaymentService) CreatePayment(p *payment.Payment) error {
+func (s *PaymentService) CreatePayment(p *payment.Payment) (err error) {
 	paymentSettings, _, err := s.paymentSettingsRepo.FetchPaymentSettings(paymentsettings.PaymentSettingFetchParams{
 		Currency: p.Currency,
 		Limit:    1,
@@ -32,7 +31,7 @@ func (s *PaymentService) CreatePayment(p *payment.Payment) error {
 	return s.paymentRepo.CreatePayment(p)
 }
 
-func (s *PaymentService) GetPayment(id string) (payment.Payment, error) {
+func (s *PaymentService) GetPayment(id string) (result payment.Payment, err error) {
 	p, err := s.paymentRepo.GetPayment(id)
 	if err != nil {
 		return payment.Payment{}, err
@@ -52,10 +51,10 @@ func (s *PaymentService) GetPayments() (result []payment.Payment, nextCursor str
 	return result, "", nil
 }
 
-func (s *PaymentService) UpdatePayment(p *payment.Payment) error {
+func (s *PaymentService) UpdatePayment(p *payment.Payment) (err error) {
 	return s.paymentRepo.UpdatePayment(p)
 }
 
-func (s *PaymentService) DeletePayment(id string) error {
+func (s *PaymentService) DeletePayment(id string) (err error) {
 	return s.paymentRepo.DeletePayment(id)
 }
