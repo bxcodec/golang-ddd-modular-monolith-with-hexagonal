@@ -32,7 +32,7 @@ func (s *PaymentRepositoryTestSuite) TearDownSuite() {
 }
 
 func (s *PaymentRepositoryTestSuite) SetupTest() {
-	s.pgContainer.TruncateTables(s.T(), "payments", "payment_settings")
+	s.pgContainer.TruncateTables(s.T(), "payment_module.payments", "payment_settings_module.payment_settings")
 }
 
 func (s *PaymentRepositoryTestSuite) TestCreatePayment() {

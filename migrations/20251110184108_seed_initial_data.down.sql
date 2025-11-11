@@ -1,5 +1,5 @@
 -- Remove seed data for payments
-DELETE FROM payments WHERE id IN (
+DELETE FROM payment_module.payments WHERE id IN (
     'pay-01JCDM8L0A1B2C3D4E5F6G7H8J',
     'pay-01JCDM8L0B2C3D4E5F6G7H8J9K',
     'pay-01JCDM8L0C3D4E5F6G7H8J9K0L',
@@ -23,7 +23,7 @@ DELETE FROM payments WHERE id IN (
 );
 
 -- Remove seed data for payment_settings
-DELETE FROM payment_settings WHERE id IN (
+DELETE FROM payment_settings_module.payment_settings WHERE id IN (
     'pset-01JCDM8K0A1B2C3D4E5F6G7H8J',
     'pset-01JCDM8K0B2C3D4E5F6G7H8J9K',
     'pset-01JCDM8K0C3D4E5F6G7H8J9K0L',
@@ -34,4 +34,3 @@ DELETE FROM payment_settings WHERE id IN (
     'pset-01JCDM8K0H8J9K0L1M2N3P4Q5R',
     'pset-01JCDM8K0J9K0L1M2N3P4Q5R6S'
 );
-
