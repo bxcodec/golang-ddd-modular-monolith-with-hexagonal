@@ -29,7 +29,7 @@ func (r *PaymentSettingsRepository) qb() sq.StatementBuilderType {
 
 func (r *PaymentSettingsRepository) FetchPaymentSettings(params paymentsettings.PaymentSettingFetchParams) (result []paymentsettings.PaymentSetting, nextCursor string, err error) {
 	query := r.qb().Select("id", "setting_key", "setting_value", "currency", "status", "created_at", "updated_at").
-		From("payment_settings").
+		From("payment_settings_module.payment_settings").
 		OrderBy("id DESC")
 
 	// Apply cursor-based pagination using ULID
@@ -93,7 +93,7 @@ func (r *PaymentSettingsRepository) FetchPaymentSettings(params paymentsettings.
 
 func (r *PaymentSettingsRepository) GetPaymentSetting(id string) (result paymentsettings.PaymentSetting, err error) {
 	err = r.qb().Select("id", "setting_key", "setting_value", "currency", "status", "created_at", "updated_at").
-		From("payment_settings").
+		From("payment_settings_module.payment_settings").
 		Where(sq.Eq{"id": id}).
 		RunWith(r.db).
 		QueryRow().
@@ -115,7 +115,7 @@ func (r *PaymentSettingsRepository) CreatePaymentSetting(settings *paymentsettin
 	settings.CreatedAt = now
 	settings.UpdatedAt = now
 
-	_, err = r.qb().Insert("payment_settings").
+	_, err = r.qb().Insert("payment_settings_module.payment_settings").
 		Columns("id", "setting_key", "setting_value", "currency", "status", "created_at", "updated_at").
 		Values(settings.ID, settings.SettingKey, settings.SettingValue, settings.Currency, settings.Status, settings.CreatedAt, settings.UpdatedAt).
 		RunWith(r.db).
@@ -130,7 +130,7 @@ func (r *PaymentSettingsRepository) CreatePaymentSetting(settings *paymentsettin
 func (r *PaymentSettingsRepository) UpdatePaymentSetting(settings *paymentsettings.PaymentSetting) (err error) {
 	settings.UpdatedAt = time.Now()
 
-	result, err := r.qb().Update("payment_settings").
+	result, err := r.qb().Update("payment_settings_module.payment_settings").
 		Set("setting_key", settings.SettingKey).
 		Set("setting_value", settings.SettingValue).
 		Set("currency", settings.Currency).
@@ -156,7 +156,7 @@ func (r *PaymentSettingsRepository) UpdatePaymentSetting(settings *paymentsettin
 }
 
 func (r *PaymentSettingsRepository) DeletePaymentSetting(id string) (err error) {
-	result, err := r.qb().Delete("payment_settings").
+	result, err := r.qb().Delete("payment_settings_module.payment_settings").
 		Where(sq.Eq{"id": id}).
 		RunWith(r.db).
 		Exec()

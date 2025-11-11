@@ -1,5 +1,5 @@
 -- Seed Payment Settings
-INSERT INTO payment_settings (id, setting_key, setting_value, currency, status, created_at, updated_at) VALUES
+INSERT INTO payment_settings_module.payment_settings (id, setting_key, setting_value, currency, status, created_at, updated_at) VALUES
 ('pset-01JCDM8K0A1B2C3D4E5F6G7H8J', 'min_transaction_amount', '10.00', 'USD', 'active', '2024-11-01 10:00:00', '2024-11-01 10:00:00'),
 ('pset-01JCDM8K0B2C3D4E5F6G7H8J9K', 'max_transaction_amount', '10000.00', 'USD', 'active', '2024-11-01 10:00:00', '2024-11-01 10:00:00'),
 ('pset-01JCDM8K0C3D4E5F6G7H8J9K0L', 'payment_timeout_seconds', '300', 'USD', 'active', '2024-11-01 10:00:00', '2024-11-01 10:00:00'),
@@ -11,7 +11,7 @@ INSERT INTO payment_settings (id, setting_key, setting_value, currency, status, 
 ('pset-01JCDM8K0J9K0L1M2N3P4Q5R6S', 'payment_timeout_seconds', '300', 'GBP', 'active', '2024-11-01 10:00:00', '2024-11-01 10:00:00');
 
 -- Seed Payments
-INSERT INTO payments (id, amount, currency, status, created_at, updated_at) VALUES
+INSERT INTO payment_module.payments (id, amount, currency, status, created_at, updated_at) VALUES
 ('pay-01JCDM8L0A1B2C3D4E5F6G7H8J', 125.5000, 'USD', 'completed', '2024-11-01 11:00:00', '2024-11-01 11:30:00'),
 ('pay-01JCDM8L0B2C3D4E5F6G7H8J9K', 299.9900, 'USD', 'completed', '2024-11-02 12:15:00', '2024-11-02 12:45:00'),
 ('pay-01JCDM8L0C3D4E5F6G7H8J9K0L', 450.0000, 'USD', 'pending', '2024-11-03 10:00:00', '2024-11-03 10:00:00'),
@@ -32,4 +32,3 @@ INSERT INTO payments (id, amount, currency, status, created_at, updated_at) VALU
 ('pay-01JCDM8L0T8V9W0X1Y2Z3A4B5C', 525.0000, 'AUD', 'failed', '2024-09-21 16:00:00', '2024-09-21 16:30:00'),
 ('pay-01JCDM8L0V9W0X1Y2Z3A4B5C6D', 410.2500, 'CHF', 'completed', '2024-09-16 12:00:00', '2024-09-16 12:30:00'),
 ('pay-01JCDM8L0W0X1Y2Z3A4B5C6D7E', 950.0000, 'CHF', 'pending', '2024-09-11 14:00:00', '2024-09-11 14:00:00');
-

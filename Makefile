@@ -190,5 +190,7 @@ clean-artifacts: ## Removes Artifacts (*.out)
 	@echo "done."
 
 
-clean-docker: ## Removes dangling docker images
+clean-docker: ## Removes dangling docker images and project volumes
 	@ docker image prune -f
+	@ docker volume prune -f
+	@ docker volume rm golang-ddd-modular-monolith-with-hexagonal_postgres_data 2>/dev/null || true

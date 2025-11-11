@@ -38,7 +38,7 @@ func (r *paymentRepository) CreatePayment(p *payment.Payment) (err error) {
 	p.CreatedAt = now
 	p.UpdatedAt = now
 
-	_, err = r.qb().Insert("payments").
+	_, err = r.qb().Insert("payment_module.payments").
 		Columns("id", "amount", "currency", "status", "created_at", "updated_at").
 		Values(p.ID, p.Amount, p.Currency, p.Status, p.CreatedAt, p.UpdatedAt).
 		RunWith(r.db).
@@ -52,7 +52,7 @@ func (r *paymentRepository) CreatePayment(p *payment.Payment) (err error) {
 
 func (r *paymentRepository) GetPayment(id string) (p payment.Payment, err error) {
 	err = r.qb().Select("id", "amount", "currency", "status", "created_at", "updated_at").
-		From("payments").
+		From("payment_module.payments").
 		Where(sq.Eq{"id": id}).
 		RunWith(r.db).
 		QueryRow().
@@ -66,7 +66,7 @@ func (r *paymentRepository) GetPayment(id string) (p payment.Payment, err error)
 
 func (r *paymentRepository) FetchPayments(params payment.FetchPaymentsParams) (result []payment.Payment, nextCursor string, err error) {
 	query := r.qb().Select("id", "amount", "currency", "status", "created_at", "updated_at").
-		From("payments").
+		From("payment_module.payments").
 		OrderBy("id DESC")
 
 	// Apply cursor-based pagination using ULID
@@ -127,7 +127,7 @@ func (r *paymentRepository) FetchPayments(params payment.FetchPaymentsParams) (r
 func (r *paymentRepository) UpdatePayment(p *payment.Payment) (err error) {
 	p.UpdatedAt = time.Now()
 
-	result, err := r.qb().Update("payments").
+	result, err := r.qb().Update("payment_module.payments").
 		Set("amount", p.Amount).
 		Set("currency", p.Currency).
 		Set("status", p.Status).
@@ -152,7 +152,7 @@ func (r *paymentRepository) UpdatePayment(p *payment.Payment) (err error) {
 }
 
 func (r *paymentRepository) DeletePayment(id string) (err error) {
-	result, err := r.qb().Delete("payments").
+	result, err := r.qb().Delete("payment_module.payments").
 		Where(sq.Eq{"id": id}).
 		RunWith(r.db).
 		Exec()
