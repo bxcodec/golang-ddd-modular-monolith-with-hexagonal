@@ -324,7 +324,6 @@ Coverage reports are generated in `coverage-all.out`.
 - Simpler than microservices while maintaining modularity
 - Easy refactoring to microservices if needed (modules are already isolated)
 - Shared infrastructure reduces operational complexity
-- ACID transactions across modules
 - No network latency between modules
 
 ### Why Hexagonal Architecture?
