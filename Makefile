@@ -121,13 +121,13 @@ TESTS_ARGS += -race
 
 tests: test-unit ## Run unit tests by default
 
-test-unit: $(GOTESTSUM) ## Run only unit tests (excludes e2e)
+test-unit: go-generate $(GOTESTSUM)  ## Run only unit tests (excludes e2e)
 	@ gotestsum $(TESTS_ARGS) -short
 
-test-e2e: $(GOTESTSUM) ## Run only E2E tests
+test-e2e: go-generate $(GOTESTSUM) ## Run only E2E tests
 	@ gotestsum --format testname --jsonfile gotestsum-e2e.json.out -- -tags=e2e -test.parallel 1 -test.count 1 -test.timeout 5m -test.coverprofile coverage-e2e.out ./...
 
-test-all: $(GOTESTSUM) ## Run all tests (unit + e2e)
+test-all: go-generate $(GOTESTSUM) ## Run all tests (unit + e2e)
 	@ gotestsum --format testname --jsonfile gotestsum-all.json.out -- -tags=e2e -test.parallel 1 -test.count 1 -test.timeout 5m -test.coverprofile coverage-all.out -race ./...
 
 tests-complete: test-all $(TPARSE) ## Run Tests & parse details
