@@ -410,8 +410,11 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 - Clean Architecture: https://blog.cleancoder.com/uncle-bob/2012/08/13/the-clean-architecture.html
 - Hexagonal Architecture: https://alistair.cockburn.us/hexagonal-architecture/
-- Domain-Driven Design: https://martinfowler.com/tags/domain%20driven%20design.html
+- Hexagonal Architecture Example: https://github.com/jmgarridopaz/bluezone
+- Presentation Domain Data Layering: https://martinfowler.com/bliki/PresentationDomainDataLayering.html
 - Original Clean Architecture Example: https://github.com/bxcodec/go-clean-arch
+- Modular Monolith in .NET: https://github.com/kgrzybek/modular-monolith-with-ddd
+- Architecting Robust .NET: https://medium.com/@mail2mhossain/architecting-robust-net-dfa4f3725142
 
 ## Author
 
