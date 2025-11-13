@@ -7,8 +7,8 @@ A Golang example project demonstrating Domain-Driven Design (DDD) in a Modular M
 
 ## Read the original Blogpost here:
 
-- Combining Modular Monolith and Hexagonal Architecture while Maintaining Domain Driven Design Principles (part 1)
-- Developing Modular Monolith and Hexagonal Architecture in Golang while Maintaining Domain Driven Design Principles (part 2)
+- [Combining Modular Monolith and Hexagonal Architecture while Maintaining Domain Driven Design Principles (part 1)](https://notes.softwarearchitect.id/p/combining-modular-monolith-and-hexagonal)
+- [Developing Modular Monolith and Hexagonal Architecture in Golang while Maintaining Domain Driven Design Principles (part 2)](https://notes.softwarearchitect.id/p/developing-modular-monolith-and-hexagonal)
 
 Please read first article first then go to second + this repository, so you will understand the reasonsing behind the current structure.
 
